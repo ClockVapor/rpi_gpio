@@ -1,4 +1,4 @@
 rpi_gpio
 ========
 
-Ruby extension for Raspberry Pi GPIO
+Ruby conversion of RPi.GPIO Python module
