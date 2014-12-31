@@ -31,13 +31,35 @@ int gpio_warnings = 1;
 
 void define_gpio_module_stuff(void)
 {
-  rb_define_singleton_method(m_GPIO, "setup!", GPIO_setup, -1);
-  rb_define_singleton_method(m_GPIO, "clean_up!", GPIO_clean_up, -1);
+  int i;
+
+  rb_define_singleton_method(m_GPIO, "setup", GPIO_setup, -1);
+  rb_define_singleton_method(m_GPIO, "clean_up", GPIO_clean_up, -1);
   rb_define_singleton_method(m_GPIO, "set_mode", GPIO_set_mode, 1);
   rb_define_singleton_method(m_GPIO, "output", GPIO_output, 2);
   rb_define_singleton_method(m_GPIO, "input", GPIO_input, 1);
   rb_define_singleton_method(m_GPIO, "set_warnings", GPIO_set_warnings, 1);
   define_constants(m_GPIO);
+
+  for (i=0; i<54; i++)
+    gpio_direction[i] = -1;
+
+   // detect board revision and set up accordingly
+   revision = get_rpi_revision();
+   if (revision == -1)
+   {
+      rb_raise(rb_eRuntimeError, "This gem can only be run on a Raspberry Pi!");
+      setup_error = 1;
+      return;
+   } 
+   else if (revision == 1)
+      pin_to_gpio = &pin_to_gpio_rev1;
+   else if (revision == 2)
+      pin_to_gpio = &pin_to_gpio_rev2;
+   else // assume model B+ or A+
+      pin_to_gpio = &pin_to_gpio_rev3;
+      
+   rb_define_const(m_GPIO, "RPI_REVISION", INT2NUM(revision));
 }
 
 int mmap_gpio_mem(void)
