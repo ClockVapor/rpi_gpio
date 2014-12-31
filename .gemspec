@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
   s.licenses = ['MIT']
   s.summary = 'Ruby conversion of RPi.GPIO Python module'
   s.authors = ['Nick Lowery']
-  s.platform = Gem::Platform::CURRENT
+  s.extensions << 'ext/rpi_gpio/extconf.rb'
   s.email = 'nick.a.lowery@gmail.com'
   s.files = Dir.glob(["{lib,ext}/**/*", 'Gemfile*', 'Rakefile',
     'LICENSE', 'README.md'])
