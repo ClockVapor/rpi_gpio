@@ -61,7 +61,7 @@ VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency)
       return Qnil;
   }
   
-  rb_iv_set(self, "@gpio", UINT2NUM(gpio))
+  rb_iv_set(self, "@gpio", UINT2NUM(gpio));
   PWM_set_frequency(self, frequency);
   return self;
 }
