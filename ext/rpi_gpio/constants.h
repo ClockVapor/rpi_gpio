@@ -34,8 +34,6 @@ VALUE serial;
 VALUE i2c;
 VALUE spi;
 VALUE unknown;
-VALUE board;
-VALUE bcm;
 VALUE pud_off;
 VALUE pud_up;
 VALUE pud_down;

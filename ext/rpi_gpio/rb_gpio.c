@@ -35,7 +35,7 @@ void define_gpio_module_stuff(void)
 
   rb_define_singleton_method(m_GPIO, "setup", GPIO_setup, -1);
   rb_define_singleton_method(m_GPIO, "clean_up", GPIO_clean_up, -1);
-  rb_define_singleton_method(m_GPIO, "set_mode", GPIO_set_mode, 1);
+  rb_define_singleton_method(m_GPIO, "set_numbering", GPIO_set_numbering, 1);
   rb_define_singleton_method(m_GPIO, "output", GPIO_output, 2);
   rb_define_singleton_method(m_GPIO, "input", GPIO_input, 1);
   rb_define_singleton_method(m_GPIO, "set_warnings", GPIO_set_warnings, 1);
@@ -260,11 +260,23 @@ VALUE GPIO_setup(int argc, VALUE *argv, VALUE self)
   return self;
 }
 
-// RPi::GPIO.set_mode(mode)
-VALUE GPIO_set_mode(VALUE self, VALUE mode)
+// RPi::GPIO.set_numbering(mode)
+VALUE GPIO_set_numbering(VALUE self, VALUE mode)
 {
-  gpio_mode = NUM2INT(mode);
-
+  const char *mode_str = NULL;
+  
+  if (TYPE(mode) == T_SYMBOL)
+    mode_str = rb_id2name(rb_to_id(mode));
+  else
+    mode_str = RSTRING_PTR(mode);
+  
+  if (strcmp(mode_str, "board") == 0)
+    gpio_mode = BOARD;
+  else if (strcmp(mode_str, "bcm") == 0)
+    gpio_mode = BCM;
+  else
+    rb_raise(rb_eArgError, "Invalid numbering mode. Must be :board or :bcm");
+      
   if (setup_error)
   {
     rb_raise(rb_eRuntimeError, "Module not imported correctly!");
