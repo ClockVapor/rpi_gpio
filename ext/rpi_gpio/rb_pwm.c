@@ -69,8 +69,8 @@ VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency)
 // RPi::GPIO::PWM#start
 VALUE PWM_start(VALUE self, VALUE duty_cycle)
 {
-  PWM_set_duty_cycle(self, duty_cycle);
   pwm_start(NUM2UINT(rb_iv_get(self, "@gpio")));
+  PWM_set_duty_cycle(self, duty_cycle);
   return self;
 }
 
@@ -90,7 +90,7 @@ VALUE PWM_set_duty_cycle(VALUE self, VALUE duty_cycle)
     return Qnil;
   }
   
-  rb_iv_set(self, "@duty_cycle", dc);
+  rb_iv_set(self, "@duty_cycle", duty_cycle);
   pwm_set_duty_cycle(NUM2UINT(rb_iv_get(self, "@gpio")), dc);
   return self;
 }
@@ -111,7 +111,7 @@ VALUE PWM_set_frequency(VALUE self, VALUE frequency)
     return Qnil;
   }
   
-  rb_iv_set(self, "@frequency", freq);
+  rb_iv_set(self, "@frequency", frequency);
   pwm_set_frequency(NUM2UINT(rb_iv_get(self, "@gpio")), freq);
   return self;
 }
