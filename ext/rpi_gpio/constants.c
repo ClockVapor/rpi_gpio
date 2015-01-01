@@ -31,13 +31,7 @@ SOFTWARE.
 #include "event_gpio.h"
 
 void define_constants(VALUE module)
-{  
-   output = INT2NUM(OUTPUT);
-   rb_define_const(module, "OUT", output);
-   
-   input = INT2NUM(INPUT);
-   rb_define_const(module, "IN", input);
-   
+{   
    pwm = INT2NUM(PWM);
    rb_define_const(module, "HARD_PWM", pwm);
    
@@ -52,15 +46,6 @@ void define_constants(VALUE module)
 
    unknown = INT2NUM(MODE_UNKNOWN);
    rb_define_const(module, "UNKNOWN", unknown);
-
-   pud_off = INT2NUM(PUD_OFF + PY_PUD_CONST_OFFSET);
-   rb_define_const(module, "PUD_OFF", pud_off);
-
-   pud_up = INT2NUM(PUD_UP + PY_PUD_CONST_OFFSET);
-   rb_define_const(module, "PUD_UP", pud_up);
-
-   pud_down = INT2NUM(PUD_DOWN + PY_PUD_CONST_OFFSET);
-   rb_define_const(module, "PUD_DOWN", pud_down);
 
    rising_edge = INT2NUM(RISING_EDGE + PY_EVENT_CONST_OFFSET);
    rb_define_const(module, "RISING", rising_edge);

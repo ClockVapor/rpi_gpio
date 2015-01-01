@@ -35,8 +35,10 @@ SOFTWARE.
 void define_gpio_module_stuff(void);
 int mmap_gpio_mem(void);
 VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self);
-VALUE GPIO_setup(int argc, VALUE *argv, VALUE self);
+VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash);
 VALUE GPIO_set_numbering(VALUE self, VALUE mode);
-VALUE GPIO_output(VALUE self, VALUE channels, VALUE vals);
-VALUE GPIO_input(VALUE self, VALUE channel);
+VALUE GPIO_set_high(VALUE self, VALUE channel);
+VALUE GPIO_set_low(VALUE self, VALUE channel);
+VALUE GPIO_test_high(VALUE self, VALUE channel);
+VALUE GPIO_test_low(VALUE self, VALUE channel);
 VALUE GPIO_set_warnings(VALUE self, VALUE setting);
