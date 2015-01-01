@@ -50,7 +50,7 @@ void define_gpio_module_stuff(void)
    revision = get_rpi_revision();
    if (revision == -1)
    {
-      rb_raise(rb_eRuntimeError, "This gem can only be run on a Raspberry Pi!");
+      rb_raise(rb_eRuntimeError, "this gem can only be run on a Raspberry Pi");
       setup_error = 1;
       return;
    } 
@@ -74,18 +74,18 @@ int mmap_gpio_mem(void)
    result = setup();
    if (result == SETUP_DEVMEM_FAIL)
    {
-      rb_raise(rb_eRuntimeError, "No access to /dev/mem.  Try running as "
-        "root!");
+      rb_raise(rb_eRuntimeError, "no access to /dev/mem; try running as "
+        "root");
       return 1;
    } 
    else if (result == SETUP_MALLOC_FAIL) 
    {
-      rb_raise(rb_eNoMemError, "Out of memory");
+      rb_raise(rb_eNoMemError, "out of memory");
       return 2;
    }
    else if (result == SETUP_MMAP_FAIL) 
    {
-      rb_raise(rb_eRuntimeError, "Mmap of GPIO registers failed");
+      rb_raise(rb_eRuntimeError, "mmap of GPIO registers failed");
       return 3;
    }
    else // result == SETUP_OK
@@ -108,7 +108,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
       channel = NUM2INT(argv[0]);
    else if (argc > 1)
    {
-      rb_raise(rb_eArgError, "wrong number of arguments");
+      rb_raise(rb_eArgError, "wrong number of arguments; 0 for all pins, 1 for a specific pin");
       return Qnil;
    }
    
@@ -124,7 +124,8 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
 
          // set everything back to input
          for (i=0; i<54; i++) {
-            if (gpio_direction[i] != -1) {
+            if (gpio_direction[i] != -1)
+            {
                setup_gpio(i, INPUT, PUD_OFF);
                gpio_direction[i] = -1;
                found = 1;
@@ -148,10 +149,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
 
    // check if any channels set up - if not warn about misuse of GPIO.clean_up()
    if (!found && gpio_warnings)
-   {
-      rb_warn("No channels have been set up yet - nothing to clean "
-        "up! Try cleaning up at the end of your program instead!");
-   }
+      rb_warn("no channels have been set up yet; nothing to clean up");
    
    return Qnil;
 }
@@ -181,8 +179,8 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
       ((func != 0 && func != 1) ||
       (gpio_direction[gpio] == -1 && func == 1)))
     {
-      rb_warn("This channel is already in use; continuing anyway. "
-        "Use RPi::GPIO.set_warnings(False) to disable warnings.");
+      rb_warn("this channel is already in use... continuing anyway. "
+        "use RPi::GPIO.set_warnings(false) to disable warnings");
     }
 
       setup_gpio(gpio, direction, pud);
@@ -203,7 +201,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
   else if (strcmp("output", direction_str) == 0)
     direction = OUTPUT;
   else
-    rb_raise(rb_eArgError, "Invalid pin direction. Must be :input or :output");   
+    rb_raise(rb_eArgError, "invalid pin direction; must be :input or :output");   
    
   // pull up, down, or off
   pud_val = rb_hash_aref(hash, ID2SYM(rb_intern("pull")));
@@ -211,7 +209,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
   {
     if (direction == OUTPUT)
     {
-      rb_raise(rb_eArgError, "Output pin cannot use pull argument");
+      rb_raise(rb_eArgError, "output pin cannot use pull argument");
       return Qnil;
     }
   
@@ -224,7 +222,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
       pud = PUD_OFF + PY_PUD_CONST_OFFSET;
     else
     {
-      rb_raise(rb_eArgError, "Invalid pin pull direction. Must be :up, :down, "
+      rb_raise(rb_eArgError, "invalid pin pull direction; must be :up, :down, "
         "or :off");
       return Qnil;
     }
@@ -235,7 +233,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
   // check module has been imported cleanly
   if (setup_error)
   {
-    rb_raise(rb_eRuntimeError, "Gem not imported correctly!");
+    rb_raise(rb_eRuntimeError, "gem not imported correctly");
     return Qnil;
   }
 
@@ -244,7 +242,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
 
   if (direction != INPUT && direction != OUTPUT)
   {
-    rb_raise(rb_eArgError, "Invalid direction");
+    rb_raise(rb_eArgError, "invalid direction");
     return Qnil;
   }
 
@@ -273,23 +271,23 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
   else if (strcmp(mode_str, "bcm") == 0)
     gpio_mode = BCM;
   else
-    rb_raise(rb_eArgError, "Invalid numbering mode. Must be :board or :bcm");
+    rb_raise(rb_eArgError, "invalid numbering mode; must be :board or :bcm");
       
   if (setup_error)
   {
-    rb_raise(rb_eRuntimeError, "Gem not imported correctly!");
+    rb_raise(rb_eRuntimeError, "gem not imported correctly");
     return Qnil;
   }
 
   if (gpio_mode != BOARD && gpio_mode != BCM)
   {
-    rb_raise(rb_eArgError, "Invalid mode");
+    rb_raise(rb_eArgError, "invalid mode");
     return Qnil;
   }
 
   if (revision == 0 && gpio_mode == BOARD)
   {
-    rb_raise(rb_eRuntimeError, "BOARD numbering system not applicable on "
+    rb_raise(rb_eRuntimeError, ":board numbering system not applicable on "
       "computer module");
     return Qnil;
   }
@@ -371,7 +369,7 @@ VALUE GPIO_test_high(VALUE self, VALUE channel)
 
   if (gpio_direction[gpio] != INPUT && gpio_direction[gpio] != OUTPUT)
   {
-    rb_raise(rb_eRuntimeError, "You must setup() the GPIO channel first");
+    rb_raise(rb_eRuntimeError, "you must setup() the GPIO channel first");
     return Qnil;
   }
 
@@ -398,7 +396,7 @@ VALUE GPIO_set_warnings(VALUE self, VALUE setting)
 {
   if (setup_error)
   {
-    rb_raise(rb_eRuntimeError, "Gem not imported correctly!");
+    rb_raise(rb_eRuntimeError, "gem not imported correctly");
     return Qnil;
   }
 
