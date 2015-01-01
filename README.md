@@ -1,4 +1,4 @@
-#rpi_gpio v0.1.0
+#rpi_gpio v0.1.1
 
 Ruby conversion of [RPi.GPIO Python module](https://pypi.python.org/pypi/RPi.GPIO)
 
@@ -81,13 +81,19 @@ pwm.start DUTY_CYCLE
 ```
 `DUTY_CYCLE` is a value from `0.0` to `100.0` indicating the percent of the time that the signal will be high.
 
-Once running, you can modify the PWM duty cycle with
+Once running, you can get/set the PWM duty cycle with
 ```
-pwm.duty_cycle = NEW_DUTY_CYCLE
+pwm.duty_cycle # get
+pwm.duty_cycle = NEW_DUTY_CYCLE # set
 ```
-and modify the PWM frequency with
+get/set the PWM frequency with
 ```
-pwm.frequency = NEW_FREQUENCY
+pwm.frequency # get
+pwm.frequency = NEW_FREQUENCY # set
+```
+and get the PWM GPIO pin with
+```
+pwm.pin
 ```
 
 To stop PWM, use
@@ -99,13 +105,13 @@ pwm.stop
 
 After your program is finished using the GPIO pins, it's a good idea to release them so other programs can use them later. Simply call
 ```
-RPi::GPIO.clean_up
-```
-to release all allocated pins, or
-```
 RPi::GPIO.clean_up PIN_NUM
 ```
-to release a specific pin.
+to release a specific pin, or
+```
+RPi::GPIO.clean_up
+```
+to release all allocated pins.
 
 ##Credits
 
