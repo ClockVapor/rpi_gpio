@@ -16,7 +16,7 @@ I aimed to make the gem's usage exactly the same as its Python counterpart -- on
 
 The easiest way to download the gem is to use [Bundler](http://bundler.io/) with a Gemfile. In your Gemfile, include the line 
 ```
-gem 'rpi_gpio', github: 'clockvapor/rpi_gpio'
+gem 'rpi_gpio'
 ```
 Then you can run `bundle install` to automatically download and compile the gem for your system. To include the gem in a Ruby file, use the line `require 'rpi_gpio'`.
 
