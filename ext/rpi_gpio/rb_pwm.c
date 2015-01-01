@@ -112,6 +112,7 @@ VALUE PWM_set_frequency(VALUE self, VALUE frequency)
   }
   
   rb_iv_set(self, "@frequency", freq);
+  pwm_set_frequency(NUM2UINT(rb_iv_get(self, "@gpio")), freq);
   return self;
 }
 
