@@ -45,6 +45,15 @@ RPi::GPIO.low? PIN_NUM
 ```
 to receive either `true` or `false`.
 
+You can use the additional hash argument `:pull` to apply a pull-up or pull-down resistor to the input pin like so:
+```
+RPi::GPIO.setup PIN_NUM, as: input, pull: :down
+# or
+RPi::GPIO.setup PIN_NUM, as: input, pull: :up
+# or (not necessary; :off is the default value)
+RPi::GPIO.setup PIN_NUM, as: input, pull: :off
+```
+
 ####Output
 
 To send output to a GPIO pin, you must first initialize it as an output pin:
@@ -60,7 +69,7 @@ to set the pin either high or low.
 
 ####PWM (pulse-width modulation)
 
-Pulse-width modulation is a useful tool for controlling things like LED brightness or motor speed. To utilize PWM, first create a PWM object.
+Pulse-width modulation is a useful tool for controlling things like LED brightness or motor speed. To utilize PWM, first create a PWM object for an output pin.
 ```
 pwm = RPi::GPIO::PWM.new(PIN_NUM, PWM_FREQ)
 ```
