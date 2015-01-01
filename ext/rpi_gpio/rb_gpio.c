@@ -324,7 +324,7 @@ VALUE GPIO_output(VALUE self, VALUE channels, VALUE vals)
   if (TYPE(vals) == T_ARRAY)
     valuecount = RARRAY_LEN(vals);
   else
-    value = NUM2INT(vals);
+    value = RTEST(vals);
   if (chancount != valuecount)
   {
     rb_raise(rb_eArgError, "Need same number of channels and values");
@@ -344,7 +344,7 @@ VALUE GPIO_output(VALUE self, VALUE channels, VALUE vals)
     for (i=0; i<chancount; i++)
     {
       channel = NUM2INT(rb_ary_entry(channels, i));
-      value = NUM2INT(rb_ary_entry(vals, i));
+      value = RTEST(rb_ary_entry(vals, i));
       if (!output())
         return Qnil;
     }
@@ -371,9 +371,9 @@ VALUE GPIO_input(VALUE self, VALUE channel)
     return Qnil;
   
   if (input_gpio(gpio))
-    return NUM2INT(HIGH);
+    return Qtrue;
   else
-    return NUM2INT(LOW);
+    return Qfalse;
 }
 
 // RPi::GPIO.set_warnings(state)

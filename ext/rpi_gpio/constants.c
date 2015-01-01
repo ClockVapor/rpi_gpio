@@ -31,13 +31,7 @@ SOFTWARE.
 #include "event_gpio.h"
 
 void define_constants(VALUE module)
-{
-   high = INT2NUM(HIGH);
-   rb_define_const(module, "HIGH", high);
-   
-   low = INT2NUM(LOW);
-   rb_define_const(module, "LOW", low);
-   
+{  
    output = INT2NUM(OUTPUT);
    rb_define_const(module, "OUT", output);
    

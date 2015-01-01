@@ -45,9 +45,6 @@ void cleanup(void);
 #define OUTPUT 0 // is really 1 for control register!
 #define ALT0   4
 
-#define HIGH 1
-#define LOW  0
-
 #define PUD_OFF  0
 #define PUD_DOWN 1
 #define PUD_UP   2
