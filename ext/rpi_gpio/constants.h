@@ -27,8 +27,6 @@ SOFTWARE.
 #define PY_PUD_CONST_OFFSET 20
 #define PY_EVENT_CONST_OFFSET 30
 
-VALUE high;
-VALUE low;
 VALUE input;
 VALUE output;
 VALUE pwm;
