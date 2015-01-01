@@ -53,12 +53,6 @@ void define_constants(VALUE module)
    unknown = INT2NUM(MODE_UNKNOWN);
    rb_define_const(module, "UNKNOWN", unknown);
 
-   board = INT2NUM(BOARD);
-   rb_define_const(module, "BOARD", board);
-
-   bcm = INT2NUM(BCM);
-   rb_define_const(module, "BCM", bcm);
-
    pud_off = INT2NUM(PUD_OFF + PY_PUD_CONST_OFFSET);
    rb_define_const(module, "PUD_OFF", pud_off);
 
