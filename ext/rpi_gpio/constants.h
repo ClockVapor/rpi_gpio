@@ -27,16 +27,11 @@ SOFTWARE.
 #define PY_PUD_CONST_OFFSET 20
 #define PY_EVENT_CONST_OFFSET 30
 
-VALUE input;
-VALUE output;
 VALUE pwm;
 VALUE serial;
 VALUE i2c;
 VALUE spi;
 VALUE unknown;
-VALUE pud_off;
-VALUE pud_up;
-VALUE pud_down;
 VALUE rising_edge;
 VALUE falling_edge;
 VALUE both_edge;

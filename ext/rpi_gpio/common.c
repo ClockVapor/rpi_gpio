@@ -47,7 +47,7 @@ int check_gpio_priv(void)
     // check module has been imported cleanly
     if (setup_error)
     {
-        rb_raise(rb_eRuntimeError, "Module not imported correctly!");
+        rb_raise(rb_eRuntimeError, "Gem not imported correctly!");
         return 1;
     }
 

@@ -33,11 +33,13 @@ void define_gpio_module_stuff(void)
 {
   int i;
 
-  rb_define_singleton_method(m_GPIO, "setup", GPIO_setup, -1);
+  rb_define_singleton_method(m_GPIO, "setup", GPIO_setup, 2);
   rb_define_singleton_method(m_GPIO, "clean_up", GPIO_clean_up, -1);
   rb_define_singleton_method(m_GPIO, "set_numbering", GPIO_set_numbering, 1);
-  rb_define_singleton_method(m_GPIO, "output", GPIO_output, 2);
-  rb_define_singleton_method(m_GPIO, "input", GPIO_input, 1);
+  rb_define_singleton_method(m_GPIO, "set_high", GPIO_set_high, 1);
+  rb_define_singleton_method(m_GPIO, "set_low", GPIO_set_low, 1);
+  rb_define_singleton_method(m_GPIO, "high?", GPIO_test_high, 1);
+  rb_define_singleton_method(m_GPIO, "low?", GPIO_test_low, 1);
   rb_define_singleton_method(m_GPIO, "set_warnings", GPIO_set_warnings, 1);
   define_constants(m_GPIO);
 
@@ -154,20 +156,23 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
    return Qnil;
 }
 
-// RPI::GPIO.setup(channel(s), direction, pull_up_down=PUD_OFF)
-VALUE GPIO_setup(int argc, VALUE *argv, VALUE self)
+// RPI::GPIO.setup(channel, hash(:as => {:input, :output}, :pull => {:off, 
+// :down, :up}(default :off)))
+VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
 {
   unsigned int gpio;
-  int channel = -1;
+  int chan = -1;
+  const char *direction_str = NULL;
   int direction;
-  int i, chancount;
+  VALUE pud_val = Qnil;
+  const char *pud_str = NULL;
   int pud = PUD_OFF + PY_PUD_CONST_OFFSET;
   int func;
   
   // func to set up channel stored in channel variable
   int setup_one(void)
   {
-    if (get_gpio_number(channel, &gpio))
+    if (get_gpio_number(chan, &gpio))
       return 0;
 
     // warn if the channel is already in use (not from this program).
@@ -186,36 +191,51 @@ VALUE GPIO_setup(int argc, VALUE *argv, VALUE self)
   }
 
   // parse arguments
-  if (argc < 2)
+  
+  // channel
+  chan = NUM2INT(channel);
+  
+  // pin direction
+  direction_str = rb_id2name(rb_to_id(rb_hash_aref(hash, ID2SYM(rb_intern("as"))
+    )));
+  if (strcmp("input", direction_str) == 0)
+    direction = INPUT;
+  else if (strcmp("output", direction_str) == 0)
+    direction = OUTPUT;
+  else
+    rb_raise(rb_eArgError, "Invalid pin direction. Must be :input or :output");   
+   
+  // pull up, down, or off
+  pud_val = rb_hash_aref(hash, ID2SYM(rb_intern("pull")));
+  if (pud_val != Qnil)
   {
-    rb_raise(rb_eArgError, "not enough arguments; need (2..3)");
-    return Qnil;
-  }
-  else if (argc == 2 || argc == 3)
-  {
-    if (TYPE(argv[0]) == T_ARRAY)
-      chancount = RARRAY_LEN(argv[0]);
+    if (direction == OUTPUT)
+    {
+      rb_raise(rb_eArgError, "Output pin cannot use pull argument");
+      return Qnil;
+    }
+  
+    pud_str = rb_id2name(rb_to_id(pud_val));
+    if (strcmp("down", pud_str) == 0)
+      pud = PUD_DOWN + PY_PUD_CONST_OFFSET;
+    else if (strcmp("up", pud_str) == 0)
+      pud = PUD_UP + PY_PUD_CONST_OFFSET;
+    else if (strcmp("off", pud_str) == 0)
+      pud = PUD_OFF + PY_PUD_CONST_OFFSET;
     else
     {
-      channel = NUM2INT(argv[0]);
-      chancount = 1;
+      rb_raise(rb_eArgError, "Invalid pin pull direction. Must be :up, :down, "
+        "or :off");
+      return Qnil;
     }
-
-    direction = NUM2INT(argv[1]);
-
-    if (argc == 3)
-      pud = NUM2INT(argv[2]);
   }
   else
-  {
-    rb_raise(rb_eArgError, "too many arguments; need (2..3)");
-    return Qnil;
-  }
+    pud = PUD_OFF + PY_PUD_CONST_OFFSET;
 
   // check module has been imported cleanly
   if (setup_error)
   {
-    rb_raise(rb_eRuntimeError, "Module not imported correctly!");
+    rb_raise(rb_eRuntimeError, "Gem not imported correctly!");
     return Qnil;
   }
 
@@ -230,32 +250,10 @@ VALUE GPIO_setup(int argc, VALUE *argv, VALUE self)
 
   if (direction == OUTPUT)
     pud = PUD_OFF + PY_PUD_CONST_OFFSET;
-
   pud -= PY_PUD_CONST_OFFSET;
-  if (pud != PUD_OFF && pud != PUD_DOWN && pud != PUD_UP) 
-  {
-    rb_raise(rb_eArgError, "Invalid value for pull_up_down - "
-      "should be either PUD_OFF, PUD_UP or PUD_DOWN");
+
+  if (!setup_one())
     return Qnil;
-  }
-
-  // given a single channel
-  if (chancount == 1)
-  {
-    if (!setup_one())
-      return Qnil;
-  }
-
-  // else given an array of channels
-  else
-  {
-    for (i=0; i<chancount; i++)
-    {
-      channel = NUM2INT(rb_ary_entry(argv[0], i));
-      if (!setup_one())
-         return Qnil;
-    }
-  }
 
   return self;
 }
@@ -279,7 +277,7 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
       
   if (setup_error)
   {
-    rb_raise(rb_eRuntimeError, "Module not imported correctly!");
+    rb_raise(rb_eRuntimeError, "Gem not imported correctly!");
     return Qnil;
   }
 
@@ -299,74 +297,72 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
   return self;
 }
 
-// RPi::GPIO.output(channel(s), val(s))
-VALUE GPIO_output(VALUE self, VALUE channels, VALUE vals)
+// RPi::GPIO.set_high(channel)
+VALUE GPIO_set_high(VALUE self, VALUE channel)
 {
   unsigned int gpio;
-  int channel = -1;
-  int value = -1;
-  int i;
-  int chancount = 1;
-  int valuecount = 1;
+  int chan = -1;
 
   // func to output value var on channel var
   int output(void)
   {
-    if (get_gpio_number(channel, &gpio))
+    if (get_gpio_number(chan, &gpio))
       return 0;
 
     if (gpio_direction[gpio] != OUTPUT)
     {
-      rb_raise(rb_eRuntimeError, "GPIO channel not set as OUTPUT");
+      rb_raise(rb_eRuntimeError, "GPIO channel not set as output");
       return 0;
     }
 
     if (check_gpio_priv())
       return 0;
 
-    output_gpio(gpio, value);
+    output_gpio(gpio, 1);
     return 1;
   }
 
-  // parse channels and values
-  if (TYPE(channels) == T_ARRAY)
-    chancount = RARRAY_LEN(channels);
-  else
-    channel = NUM2INT(channels);
-  if (TYPE(vals) == T_ARRAY)
-    valuecount = RARRAY_LEN(vals);
-  else
-    value = RTEST(vals);
-  if (chancount != valuecount)
-  {
-    rb_raise(rb_eArgError, "Need same number of channels and values");
+  chan = NUM2INT(channel);
+  if (!output())
     return Qnil;
-  }
-
-  // given one channel/value
-  if (chancount == 1)
-  {
-    if (!output())
-      return Qnil;
-  }
-  
-  // else given multiple channels/values
-  else
-  {
-    for (i=0; i<chancount; i++)
-    {
-      channel = NUM2INT(rb_ary_entry(channels, i));
-      value = RTEST(rb_ary_entry(vals, i));
-      if (!output())
-        return Qnil;
-    }
-  }
 
   return self;
 }
 
-// RPi::GPIO.input(channel)
-VALUE GPIO_input(VALUE self, VALUE channel)
+// RPi::GPIO.set_low(channel)
+VALUE GPIO_set_low(VALUE self, VALUE channel)
+{
+  unsigned int gpio;
+  int chan = -1;
+
+  // func to output value var on channel var
+  int output(void)
+  {
+    if (get_gpio_number(chan, &gpio))
+      return 0;
+
+    if (gpio_direction[gpio] != OUTPUT)
+    {
+      rb_raise(rb_eRuntimeError, "GPIO channel not set as output");
+      return 0;
+    }
+
+    if (check_gpio_priv())
+      return 0;
+
+    output_gpio(gpio, 0);
+    return 1;
+  }
+
+  chan = NUM2INT(channel);
+  if (!output())
+    return Qnil;
+
+  return self;
+}
+
+// RPi::GPIO.high?(channel)
+VALUE GPIO_test_high(VALUE self, VALUE channel)
 {
   unsigned int gpio;
   
@@ -388,12 +384,21 @@ VALUE GPIO_input(VALUE self, VALUE channel)
     return Qfalse;
 }
 
+// RPi::GPIO.low?(channel)
+VALUE GPIO_test_low(VALUE self, VALUE channel)
+{
+  VALUE val = GPIO_test_high(self, channel);
+  if (val == Qtrue) return Qfalse;
+  else if (val == Qfalse) return Qtrue;
+  else return Qnil;
+}
+
 // RPi::GPIO.set_warnings(state)
 VALUE GPIO_set_warnings(VALUE self, VALUE setting)
 {
   if (setup_error)
   {
-    rb_raise(rb_eRuntimeError, "Module not imported correctly!");
+    rb_raise(rb_eRuntimeError, "Gem not imported correctly!");
     return Qnil;
   }
 
