@@ -47,11 +47,11 @@ to receive either `true` or `false`.
 
 You can use the additional hash argument `:pull` to apply a pull-up or pull-down resistor to the input pin like so:
 ```
-RPi::GPIO.setup PIN_NUM, as: input, pull: :down
+RPi::GPIO.setup PIN_NUM, as: :input, pull: :down
 # or
-RPi::GPIO.setup PIN_NUM, as: input, pull: :up
+RPi::GPIO.setup PIN_NUM, as: :input, pull: :up
 # or (not necessary; :off is the default value)
-RPi::GPIO.setup PIN_NUM, as: input, pull: :off
+RPi::GPIO.setup PIN_NUM, as: :input, pull: :off
 ```
 
 ####Output
