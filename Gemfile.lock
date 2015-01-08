@@ -1,8 +1,13 @@
+PATH
+  remote: .
+  specs:
+    rpi_gpio (0.1.2)
+
 GEM
   remote: https://rubygems.org/
   specs:
     rake (10.4.2)
-    rake-compiler (0.9.4)
+    rake-compiler (0.9.5)
       rake
 
 PLATFORMS
@@ -10,3 +15,4 @@ PLATFORMS
 
 DEPENDENCIES
   rake-compiler
+  rpi_gpio!
