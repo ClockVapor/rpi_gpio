@@ -94,6 +94,51 @@ int mmap_gpio_mem(void)
    }
 }
 
+int is_gpio_input(unsigned int gpio)
+{
+  if (gpio_direction[gpio] != INPUT)
+  {
+    if (gpio_direction[gpio] != OUTPUT)
+    {
+      rb_raise(rb_eRuntimeError, "you must setup() the GPIO channel first");
+      return 0;
+    }
+
+    rb_raise(rb_eRuntimeError, "GPIO channel not setup as input");
+    return 0;
+  }
+
+  return 1;
+}
+
+int is_gpio_output(unsigned int gpio)
+{
+  if (gpio_direction[gpio] != OUTPUT)
+  {
+    if (gpio_direction[gpio] != INPUT)
+    {
+      rb_raise(rb_eRuntimeError, "you must setup() the GPIO channel first");
+      return 0;
+    }
+
+    rb_raise(rb_eRuntimeError, "GPIO channel not setup as output");
+    return 0;
+  }
+
+  return 1;
+}
+
+int is_rpi(void)
+{
+  if (setup_error)
+  {
+    rb_raise(rb_eRuntimeError, "this gem can only be run on a Raspberry Pi");
+    return 0;
+  }
+
+  return 1;
+}
+
 // RPi::GPIO.clean_up(channel=nil)
 // clean up everything by default; otherwise, clean up given channel
 VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
@@ -107,7 +152,8 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
       channel = NUM2INT(argv[0]);
    else if (argc > 1)
    {
-      rb_raise(rb_eArgError, "wrong number of arguments; 0 for all pins, 1 for a specific pin");
+      rb_raise(rb_eArgError, "wrong number of arguments; 0 for all pins, "
+        "1 for a specific pin");
       return Qnil;
    }
    
@@ -229,14 +275,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
   else
     pud = PUD_OFF;
 
-  // check module has been imported cleanly
-  if (setup_error)
-  {
-    rb_raise(rb_eRuntimeError, "gem not imported correctly");
-    return Qnil;
-  }
-
-  if (mmap_gpio_mem())
+  if (!is_rpi() || mmap_gpio_mem())
     return Qnil;
 
   if (direction != INPUT && direction != OUTPUT)
@@ -271,11 +310,8 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
   else
     rb_raise(rb_eArgError, "invalid numbering mode; must be :board or :bcm");
       
-  if (setup_error)
-  {
-    rb_raise(rb_eRuntimeError, "gem not imported correctly");
+  if (!is_rpi())
     return Qnil;
-  }
 
   if (gpio_mode != BOARD && gpio_mode != BCM)
   {
@@ -297,31 +333,14 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
 VALUE GPIO_set_high(VALUE self, VALUE channel)
 {
   unsigned int gpio;
-  int chan = -1;
+  int chan = NUM2INT(channel);
 
-  // func to output value var on channel var
-  int output(void)
-  {
-    if (get_gpio_number(chan, &gpio))
-      return 0;
+  if (get_gpio_number(chan, &gpio) ||
+    !is_gpio_output(gpio) ||
+    check_gpio_priv())
+  return Qnil;
 
-    if (gpio_direction[gpio] != OUTPUT)
-    {
-      rb_raise(rb_eRuntimeError, "GPIO channel not set as output");
-      return 0;
-    }
-
-    if (check_gpio_priv())
-      return 0;
-
-    output_gpio(gpio, 1);
-    return 1;
-  }
-
-  chan = NUM2INT(channel);
-  if (!output())
-    return Qnil;
-
+  output_gpio(gpio, 1);
   return self;
 }
 
@@ -329,31 +348,14 @@ VALUE GPIO_set_high(VALUE self, VALUE channel)
 VALUE GPIO_set_low(VALUE self, VALUE channel)
 {
   unsigned int gpio;
-  int chan = -1;
+  int chan = NUM2INT(channel);
 
-  // func to output value var on channel var
-  int output(void)
-  {
-    if (get_gpio_number(chan, &gpio))
-      return 0;
+  if (get_gpio_number(chan, &gpio) ||
+    !is_gpio_output(gpio) ||
+    check_gpio_priv())
+  return Qnil;
 
-    if (gpio_direction[gpio] != OUTPUT)
-    {
-      rb_raise(rb_eRuntimeError, "GPIO channel not set as output");
-      return 0;
-    }
-
-    if (check_gpio_priv())
-      return 0;
-
-    output_gpio(gpio, 0);
-    return 1;
-  }
-
-  chan = NUM2INT(channel);
-  if (!output())
-    return Qnil;
-
+  output_gpio(gpio, 0);
   return self;
 }
 
@@ -362,41 +364,25 @@ VALUE GPIO_test_high(VALUE self, VALUE channel)
 {
   unsigned int gpio;
   
-  if (get_gpio_number(NUM2INT(channel), &gpio))
+  if (get_gpio_number(NUM2INT(channel), &gpio) ||
+      !is_gpio_input(gpio) ||
+      check_gpio_priv())
     return Qnil;
-
-  if (gpio_direction[gpio] != INPUT && gpio_direction[gpio] != OUTPUT)
-  {
-    rb_raise(rb_eRuntimeError, "you must setup() the GPIO channel first");
-    return Qnil;
-  }
-
-  if (check_gpio_priv())
-    return Qnil;
-  
-  if (input_gpio(gpio))
-    return Qtrue;
-  else
-    return Qfalse;
+ 
+  return input_gpio(gpio) ? Qtrue : Qfalse;
 }
 
 // RPi::GPIO.low?(channel)
 VALUE GPIO_test_low(VALUE self, VALUE channel)
 {
-  VALUE val = GPIO_test_high(self, channel);
-  if (val == Qtrue) return Qfalse;
-  else if (val == Qfalse) return Qtrue;
-  else return Qnil;
+  return GPIO_test_high(self, channel) ? Qfalse : Qtrue;
 }
 
 // RPi::GPIO.set_warnings(state)
 VALUE GPIO_set_warnings(VALUE self, VALUE setting)
 {
-  if (setup_error)
-  {
-    rb_raise(rb_eRuntimeError, "gem not imported correctly");
+  if (!is_rpi())
     return Qnil;
-  }
 
   gpio_warnings = NUM2INT(setting);
   return self;
