@@ -166,9 +166,9 @@ void set_pullupdn(int gpio, int pud)
     int shift = (gpio%32);
     
     if (pud == PUD_DOWN)
-       *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_DOWN;
+       *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET)&~3)|PUD_DOWN;
     else if (pud == PUD_UP)
-       *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_UP;
+       *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET)&~3)|PUD_UP;
     else  // pud == PUD_OFF
        *(gpio_map+PULLUPDN_OFFSET) &= ~3;
     

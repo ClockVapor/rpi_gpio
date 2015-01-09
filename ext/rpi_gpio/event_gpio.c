@@ -102,7 +102,8 @@ int gpio_set_direction(unsigned int gpio, unsigned int in_flag)
     int fd;
     char filename[33];
 
-    snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/direction", gpio);
+    snprintf(filename, sizeof(filename),
+      "/sys/class/gpio/gpio%d/direction", gpio);
     if ((fd = open(filename, O_WRONLY)) < 0)
         return -1;
 
@@ -527,12 +528,16 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
             epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
             return 2;
         }
-        if (g->initial_wait) {    // first time triggers with current state, so ignore
-            g->initial_wait = 0;
+        // first time triggers with current state, so ignore
+        if (g->initial_wait) {  
+          g->initial_wait = 0;
         } else {
             gettimeofday(&tv_timenow, NULL);
             timenow = tv_timenow.tv_sec*1E6 + tv_timenow.tv_usec;
-            if (g->bouncetime == -666 || timenow - g->lastcall > g->bouncetime*1000 || g->lastcall == 0 || g->lastcall > timenow) {
+            if (g->bouncetime == -666 ||
+            timenow - g->lastcall > g->bouncetime*1000 ||
+              g->lastcall == 0 ||
+              g->lastcall > timenow) {
                 g->lastcall = timenow;
                 finished = 1;
             }
