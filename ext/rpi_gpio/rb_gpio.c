@@ -33,15 +33,14 @@ void define_gpio_module_stuff(void)
 {
   int i;
 
-  rb_define_singleton_method(m_GPIO, "setup", GPIO_setup, 2);
-  rb_define_singleton_method(m_GPIO, "clean_up", GPIO_clean_up, -1);
-  rb_define_singleton_method(m_GPIO, "set_numbering", GPIO_set_numbering, 1);
-  rb_define_singleton_method(m_GPIO, "set_high", GPIO_set_high, 1);
-  rb_define_singleton_method(m_GPIO, "set_low", GPIO_set_low, 1);
-  rb_define_singleton_method(m_GPIO, "high?", GPIO_test_high, 1);
-  rb_define_singleton_method(m_GPIO, "low?", GPIO_test_low, 1);
-  rb_define_singleton_method(m_GPIO, "set_warnings", GPIO_set_warnings, 1);
-  define_constants(m_GPIO);
+  rb_define_module_function(m_GPIO, "setup", GPIO_setup, 2);
+  rb_define_module_function(m_GPIO, "clean_up", GPIO_clean_up, -1);
+  rb_define_module_function(m_GPIO, "set_numbering", GPIO_set_numbering, 1);
+  rb_define_module_function(m_GPIO, "set_high", GPIO_set_high, 1);
+  rb_define_module_function(m_GPIO, "set_low", GPIO_set_low, 1);
+  rb_define_module_function(m_GPIO, "high?", GPIO_test_high, 1);
+  rb_define_module_function(m_GPIO, "low?", GPIO_test_low, 1);
+  rb_define_module_function(m_GPIO, "set_warnings", GPIO_set_warnings, 1);
 
   for (i=0; i<54; i++)
     gpio_direction[i] = -1;
@@ -164,7 +163,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
   int direction;
   VALUE pud_val = Qnil;
   const char *pud_str = NULL;
-  int pud = PUD_OFF + PY_PUD_CONST_OFFSET;
+  int pud = PUD_OFF;
   int func;
   
   // func to set up channel stored in channel variable
@@ -215,11 +214,11 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
   
     pud_str = rb_id2name(rb_to_id(pud_val));
     if (strcmp("down", pud_str) == 0)
-      pud = PUD_DOWN + PY_PUD_CONST_OFFSET;
+      pud = PUD_DOWN;
     else if (strcmp("up", pud_str) == 0)
-      pud = PUD_UP + PY_PUD_CONST_OFFSET;
+      pud = PUD_UP;
     else if (strcmp("off", pud_str) == 0)
-      pud = PUD_OFF + PY_PUD_CONST_OFFSET;
+      pud = PUD_OFF;
     else
     {
       rb_raise(rb_eArgError, "invalid pin pull direction; must be :up, :down, "
@@ -228,7 +227,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
     }
   }
   else
-    pud = PUD_OFF + PY_PUD_CONST_OFFSET;
+    pud = PUD_OFF;
 
   // check module has been imported cleanly
   if (setup_error)
@@ -247,8 +246,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
   }
 
   if (direction == OUTPUT)
-    pud = PUD_OFF + PY_PUD_CONST_OFFSET;
-  pud -= PY_PUD_CONST_OFFSET;
+    pud = PUD_OFF;
 
   if (!setup_one())
     return Qnil;

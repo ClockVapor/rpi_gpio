@@ -29,7 +29,6 @@ SOFTWARE.
 #include "event_gpio.h"
 #include "cpuinfo.h"
 #include "common.h"
-#include "constants.h"
 #include "rb_pwm.h"
 
 void define_gpio_module_stuff(void);
