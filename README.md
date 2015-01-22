@@ -121,3 +121,7 @@ Original Python code by Ben Croston modified for Ruby by Nick Lowery
 Copyright (c) 2014-2015 [Nick Lowery](https://github.com/ClockVapor)
 
 View LICENSE for full license.
+
+All donations are gratefully accepted. 
+
+<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=nick%2ea%2elowery%40gmail%2ecom&lc=US&item_name=Nick%20Lowery%3a%20open%2dsource%20software&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHostedGuest"><img alt="Donate here" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"></a>
