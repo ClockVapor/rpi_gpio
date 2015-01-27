@@ -35,7 +35,7 @@ RPi::GPIO.set_numbering :bcm
 
 To receive input from a GPIO pin, you must first initialize it as an input pin:
 ```ruby
-RPi::GPIO.setup PIN_NUM, as: :input
+RPi::GPIO.setup PIN_NUM, :as => :input
 ```
 The pin number will differ based on your selected numbering system and which pin you want to use.
 
@@ -48,18 +48,18 @@ to receive either `true` or `false`.
 
 You can use the additional hash argument `:pull` to apply a pull-up or pull-down resistor to the input pin like so:
 ```ruby
-RPi::GPIO.setup PIN_NUM, as: :input, pull: :down
+RPi::GPIO.setup PIN_NUM, :as => :input, :pull => :down
 # or
-RPi::GPIO.setup PIN_NUM, as: :input, pull: :up
+RPi::GPIO.setup PIN_NUM, :as => :input, :pull => :up
 # or (not necessary; :off is the default value)
-RPi::GPIO.setup PIN_NUM, as: :input, pull: :off
+RPi::GPIO.setup PIN_NUM, :as => :input, :pull => :off
 ```
 
 ####Output
 
 To send output to a GPIO pin, you must first initialize it as an output pin:
 ```ruby
-RPi::GPIO.setup PIN_NUM, as: :output
+RPi::GPIO.setup PIN_NUM, :as => :output
 ```
 Now you can use the calls
 ```ruby
