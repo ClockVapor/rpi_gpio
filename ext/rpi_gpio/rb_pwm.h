@@ -32,9 +32,10 @@ SOFTWARE.
 void define_pwm_class_stuff(void);
 VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency);
 VALUE PWM_start(VALUE self, VALUE duty_cycle);
-VALUE PWM_get_pin(VALUE self);
+VALUE PWM_get_gpio(VALUE self);
 VALUE PWM_get_duty_cycle(VALUE self);
 VALUE PWM_set_duty_cycle(VALUE self, VALUE duty_cycle);
 VALUE PWM_get_frequency(VALUE self);
 VALUE PWM_set_frequency(VALUE self, VALUE frequency);
 VALUE PWM_stop(VALUE self);
+VALUE PWM_get_running(VALUE self);
