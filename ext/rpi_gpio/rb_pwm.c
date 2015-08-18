@@ -34,12 +34,13 @@ void define_pwm_class_stuff(void)
   c_PWM = rb_define_class_under(m_GPIO, "PWM", rb_cObject);
   rb_define_method(c_PWM, "initialize", PWM_initialize, 2);
   rb_define_method(c_PWM, "start", PWM_start, 1);
-  rb_define_method(c_PWM, "pin", PWM_get_pin, 0);
+  rb_define_method(c_PWM, "gpio", PWM_get_gpio, 0);
   rb_define_method(c_PWM, "duty_cycle", PWM_get_duty_cycle, 0);
   rb_define_method(c_PWM, "duty_cycle=", PWM_set_duty_cycle, 1);
   rb_define_method(c_PWM, "frequency", PWM_get_frequency, 0);
   rb_define_method(c_PWM, "frequency=", PWM_set_frequency, 1);
   rb_define_method(c_PWM, "stop", PWM_stop, 0);
+  rb_define_method(c_PWM, "running?", PWM_get_running, 0);
 }
 
 // RPi::GPIO::PWM#initialize
@@ -57,12 +58,13 @@ VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency)
   // ensure channel is set as output
   if (gpio_direction[gpio] != OUTPUT)
   {
-    rb_raise(rb_eRuntimeError, "you must setup() the GPIO channel as output "
-      "first");
+    rb_raise(rb_eRuntimeError, "you must setup the GPIO channel as output "
+      "first with RPi::GPIO.setup CHANNEL, :as => :output");
       return Qnil;
   }
   
-  rb_iv_set(self, "@pin", UINT2NUM(gpio));
+  rb_iv_set(self, "@gpio", UINT2NUM(gpio));
+  rb_iv_set(self, "@running", Qfalse);
   PWM_set_frequency(self, frequency);
   return self;
 }
@@ -70,15 +72,16 @@ VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency)
 // RPi::GPIO::PWM#start
 VALUE PWM_start(VALUE self, VALUE duty_cycle)
 {
-  pwm_start(NUM2UINT(rb_iv_get(self, "@pin")));
+  pwm_start(NUM2UINT(rb_iv_get(self, "@gpio")));
   PWM_set_duty_cycle(self, duty_cycle);
+  rb_iv_set(self, "@running", Qtrue);
   return self;
 }
 
-// RPi::GPIO::PWM#pin
-VALUE PWM_get_pin(VALUE self)
+// RPi::GPIO::PWM#gpio
+VALUE PWM_get_gpio(VALUE self)
 {
-  return rb_iv_get(self, "@pin");
+  return rb_iv_get(self, "@gpio");
 }
 
 // RPi::GPIO::PWM#duty_cycle
@@ -98,7 +101,7 @@ VALUE PWM_set_duty_cycle(VALUE self, VALUE duty_cycle)
   }
   
   rb_iv_set(self, "@duty_cycle", duty_cycle);
-  pwm_set_duty_cycle(NUM2UINT(rb_iv_get(self, "@pin")), dc);
+  pwm_set_duty_cycle(NUM2UINT(rb_iv_get(self, "@gpio")), dc);
   return self;
 }
 
@@ -119,13 +122,20 @@ VALUE PWM_set_frequency(VALUE self, VALUE frequency)
   }
   
   rb_iv_set(self, "@frequency", frequency);
-  pwm_set_frequency(NUM2UINT(rb_iv_get(self, "@pin")), freq);
+  pwm_set_frequency(NUM2UINT(rb_iv_get(self, "@gpio")), freq);
   return self;
 }
 
 // RPi::GPIO::PWM#stop
 VALUE PWM_stop(VALUE self)
 {
-  pwm_stop(NUM2UINT(rb_iv_get(self, "@pin")));
+  pwm_stop(NUM2UINT(rb_iv_get(self, "@gpio")));
+  rb_iv_set(self, "@running", Qfalse);
   return self;
+}
+
+// RPi::GPIO::PWM#running?
+VALUE PWM_get_running(VALUE self)
+{
+  return rb_iv_get(self, "@running");
 }
