@@ -103,14 +103,16 @@ int gpio_set_direction(unsigned int gpio, unsigned int in_flag)
     char filename[33];
 
     snprintf(filename, sizeof(filename),
-      "/sys/class/gpio/gpio%d/direction", gpio);
-    if ((fd = open(filename, O_WRONLY)) < 0)
+        "/sys/class/gpio/gpio%d/direction", gpio);
+    if ((fd = open(filename, O_WRONLY)) < 0) {
         return -1;
+    }
 
-    if (in_flag)
+    if (in_flag) {
         write(fd, "in", 3);
-    else
+    } else {
         write(fd, "out", 4);
+    }
 
     close(fd);
     return 0;
@@ -485,9 +487,11 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
     struct timeval tv_timenow;
     unsigned long long timenow;
     int finished = 0;
+    int initial_edge = 1;
 
-    if (callback_exists(gpio))
+    if (callback_exists(gpio)) {
         return 1;
+    }
 
     // add gpio if it has not been added already
     ed = gpio_event_added(gpio);
@@ -528,9 +532,8 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
             epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
             return 2;
         }
-        // first time triggers with current state, so ignore
-        if (g->initial_wait) {  
-          g->initial_wait = 0;
+        if (initial_edge) { // first time triggers with current state, so ignore  
+            initial_edge = 0;
         } else {
             gettimeofday(&tv_timenow, NULL);
             timenow = tv_timenow.tv_sec*1E6 + tv_timenow.tv_usec;
@@ -544,13 +547,10 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
         }
     }
 
+    // check event was valid
     if (n > 0) {
         lseek(events.data.fd, 0, SEEK_SET);
-        if (read(events.data.fd, &buf, 1) != 1) {
-            epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
-            return 2;
-        }
-        if (events.data.fd != g->value_fd) {
+        if ((read(events.data.fd, &buf, 1) != 1) || (events.data.fd != g->value_fd)) {
             epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
             return 2;
         }

@@ -1,19 +1,22 @@
-#rpi_gpio v0.1.5
+# rpi_gpio v0.2.0
 
 Ruby conversion of [RPi.GPIO Python module](https://pypi.python.org/pypi/RPi.GPIO)
 
-##Features
+## Features
 
 Manipulate your Raspberry Pi's GPIO pins from Ruby!
+
 - Boolean input/output
 - Software-driven PWM (written in C for speed)
 - *Upcoming*: event-driven input
 
-##Sample Usage
+Up-to-date with RPi.GPIO Python module version 0.5.11, so it works on all Raspberry Pi models!
+
+## Sample Usage
 
 I aimed to make the gem's usage exactly the same as its Python counterpart -- only with a few semantic differences to utilize Ruby's readability. If anything is confusing, you can always check [here](http://sourceforge.net/p/raspberry-gpio-python/wiki/Examples/) for the original Python module's documentation.
 
-####Download the gem
+#### Download the gem
 
 The easiest way to download the gem is to use [Bundler](http://bundler.io/) with a Gemfile. In your Gemfile, include the line 
 ```ruby
@@ -21,7 +24,7 @@ gem 'rpi_gpio'
 ```
 Then you can run `bundle install` to automatically download and compile the gem for your system. To include the gem in a Ruby file, use the line `require 'rpi_gpio'`.
 
-####Pin numbering
+#### Pin numbering
 
 Before you can do anything with the GPIO pins, you need to specify how you want to number them.
 ```ruby
@@ -31,7 +34,7 @@ RPi::GPIO.set_numbering :bcm
 ````
 `:board` numbering refers to the physical pin numbers on the Pi, whereas `:bcm` numbering refers to the Broadcom SOC channel numbering. Note that `:bcm` numbering differs between Pi models, while `:board` numbering does not.
 
-####Input
+#### Input
 
 To receive input from a GPIO pin, you must first initialize it as an input pin:
 ```ruby
@@ -55,7 +58,7 @@ RPi::GPIO.setup PIN_NUM, :as => :input, :pull => :up
 RPi::GPIO.setup PIN_NUM, :as => :input, :pull => :off
 ```
 
-####Output
+#### Output
 
 To send output to a GPIO pin, you must first initialize it as an output pin:
 ```ruby
@@ -68,9 +71,9 @@ RPi::GPIO.set_low PIN_NUM
 ```
 to set the pin either high or low.
 
-####PWM (pulse-width modulation)
+#### PWM (pulse-width modulation)
 
-Pulse-width modulation is a useful tool for controlling things like LED brightness or motor speed. To utilize PWM, first create a PWM object for an output pin.
+Pulse-width modulation is a useful tool for controlling things like LED brightness or motor speed. To utilize PWM, first create a PWM object for an [output pin](#output).
 ```ruby
 pwm = RPi::GPIO::PWM.new(PIN_NUM, PWM_FREQ)
 ```
@@ -92,17 +95,23 @@ get/set the PWM frequency with
 pwm.frequency # get
 pwm.frequency = NEW_FREQUENCY # set
 ```
-and get the PWM GPIO pin with
+and get the PWM GPIO number with
 ```ruby
-pwm.pin
+pwm.gpio
 ```
+Note that this number corresponds to `:bcm` numbering of the GPIO pins, so it will be different than pin number you used if you created the PWM with `:board` numbering.
 
 To stop PWM, use
 ```ruby
 pwm.stop
 ```
 
-####Cleaning up
+To check if a PWM object is currently running, use
+```ruby
+pwm.running?
+```
+
+#### Cleaning up
 
 After your program is finished using the GPIO pins, it's a good idea to release them so other programs can use them later. Simply call
 ```ruby
@@ -114,7 +123,13 @@ RPi::GPIO.clean_up
 ```
 to release all allocated pins.
 
-##Credits
+Alternatively, you can call
+```ruby
+RPi::GPIO.reset
+```
+to clean up all pins and to also reset the selected numbering mode.
+
+## Credits
 
 Original Python code by Ben Croston modified for Ruby by Nick Lowery
 
