@@ -24,4 +24,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-int get_rpi_revision(void);
+#ifndef CPUINFO_H
+#define CPUINFO_H
+typedef struct
+{
+   int p1_revision;
+   char *ram;
+   char *manufacturer;
+   char *processor;
+   char *type;
+   char revision[1024];
+} rpi_info;
+#endif /* CPUINFO_H */
+
+int get_rpi_info(rpi_info *info);
