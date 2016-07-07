@@ -1,9 +1,9 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2015 Nick Lowery
+Copyright (c) 2014-2016 Nick Lowery
 
-Copyright (c) 2013-2014 Ben Croston
+Copyright (c) 2013-2016 Ben Croston
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -81,6 +81,12 @@ int mmap_gpio_mem(void)
     } else if (result == SETUP_MMAP_FAIL)  {
         rb_raise(rb_eRuntimeError, "mmap of GPIO registers failed");
         return 3;
+    } else if (result == SETUP_CPUINFO_FAIL) {
+        rb_raise(rb_eRuntimeError, "unable to open /proc/cpuinfo");
+        return 4;
+    } else if (result == SETUP_NOT_RPI_FAIL) {
+        rb_raise(rb_eRuntimeError, "not running on a RPi");
+        return 5;
     } else { // result == SETUP_OK
         module_setup = 1;
         return 0;
@@ -230,6 +236,18 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
             rb_warn("this channel is already in use... continuing anyway. "
                 "use RPi::GPIO.set_warnings(false) to disable warnings");
         }
+        
+        if (gpio_warnings) {
+            if (rpiinfo.p1_revision == 0) { // compute module - do nothing
+            } else if ((rpiinfo.p1_revision == 1 && 
+                (gpio == 0 || gpio == 1)) ||
+                (gpio == 2 || gpio == 3)) {
+                if (pud == PUD_UP || pud == PUD_DOWN) {
+                    rb_warn("a physical pull up resistor is fitted on "
+                        "this channel");
+                }
+            }
+        }
 
         setup_gpio(gpio, direction, pud);
         gpio_direction[gpio] = direction;
@@ -300,6 +318,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
 // RPi::GPIO.set_numbering(mode)
 VALUE GPIO_set_numbering(VALUE self, VALUE mode)
 {
+    int new_mode;
     const char *mode_str = NULL;
   
     if (TYPE(mode) == T_SYMBOL) {
@@ -309,9 +328,9 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
     }
   
     if (strcmp(mode_str, "board") == 0) {
-        gpio_mode = BOARD;
+        new_mode = BOARD;
     } else if (strcmp(mode_str, "bcm") == 0) {
-        gpio_mode = BCM;
+        new_mode = BCM;
     } else {
         rb_raise(rb_eArgError, 
             "invalid numbering mode; must be :board or :bcm");
@@ -321,17 +340,18 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
         return Qnil;
     }
 
-    if (gpio_mode != BOARD && gpio_mode != BCM) {
+    if (new_mode != BOARD && new_mode != BCM) {
         rb_raise(rb_eArgError, "invalid mode");
         return Qnil;
     }
 
-    if (rpiinfo.p1_revision == 0 && gpio_mode == BOARD) {
+    if (rpiinfo.p1_revision == 0 && new_mode == BOARD) {
         rb_raise(rb_eRuntimeError, ":board numbering system not applicable on "
-            "computer module");
+            "compute module");
         return Qnil;
     }
 
+		gpio_mode = new_mode;
     return self;
 }
 
