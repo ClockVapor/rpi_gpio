@@ -1,9 +1,9 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2015 Nick Lowery
+Copyright (c) 2014-2016 Nick Lowery
 
-Copyright (c) 2013-2014 Ben Croston
+Copyright (c) 2013-2016 Ben Croston
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -99,12 +99,22 @@ int gpio_unexport(unsigned int gpio)
 
 int gpio_set_direction(unsigned int gpio, unsigned int in_flag)
 {
+    int retry;
+    struct timespec delay;
     int fd;
     char filename[33];
 
-    snprintf(filename, sizeof(filename),
-        "/sys/class/gpio/gpio%d/direction", gpio);
-    if ((fd = open(filename, O_WRONLY)) < 0) {
+    snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/direction", gpio);
+
+    // retry waiting for udev to set correct file permissions
+    delay.tv_sec = 0;
+    delay.tv_nsec = 10000000L; // 10ms
+    for (retry=0; retry<100; retry++) {
+        if ((fd = open(filename, O_WRONLY)) >= 0)
+            break;
+        nanosleep(&delay, NULL);
+    }
+    if (retry >= 100) {
         return -1;
     }
 
@@ -173,8 +183,9 @@ struct gpios *new_gpio(unsigned int gpio)
     struct gpios *new_gpio;
 
     new_gpio = malloc(sizeof(struct gpios));
-    if (new_gpio == 0)
+    if (new_gpio == 0) {
         return NULL;  // out of memory
+    }
 
     new_gpio->gpio = gpio;
     if (gpio_export(gpio) != 0) {
@@ -474,11 +485,12 @@ int add_edge_detect(unsigned int gpio, unsigned int edge, int bouncetime)
     return 0;
 }
 
-int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
+int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime, int timeout)
 // return values:
-//    0 - Success
-//    1 - Edge detection already added
-//    2 - Other error
+//    1 - Success (edge detected)
+//    0 - Timeout
+//   -1 - Edge detection already added
+//   -2 - Other error
 {
     int n, ed;
     struct epoll_event events, ev;
@@ -490,7 +502,7 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
     int initial_edge = 1;
 
     if (callback_exists(gpio)) {
-        return 1;
+        return -1;
     }
 
     // add gpio if it has not been added already
@@ -498,11 +510,12 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
     if (ed == edge) {   // get existing record
         g = get_gpio(gpio);
         if (g->bouncetime != -666 && g->bouncetime != bouncetime) {
-            return 1;
+            return -1;
         }
     } else if (ed == NO_EDGE) {   // not found so add event
-        if ((g = new_gpio(gpio)) == NULL)
-            return 2;
+        if ((g = new_gpio(gpio)) == NULL) {
+            return -2;
+        }
         gpio_set_edge(gpio, edge);
         g->edge = edge;
         g->bouncetime = bouncetime;
@@ -516,31 +529,28 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
 
     // create epfd_blocking if not already open
     if ((epfd_blocking == -1) && ((epfd_blocking = epoll_create(1)) == -1)) {
-        return 2;
+        return -2;
     }
 
     // add to epoll fd
     ev.events = EPOLLIN | EPOLLET | EPOLLPRI;
     ev.data.fd = g->value_fd;
     if (epoll_ctl(epfd_blocking, EPOLL_CTL_ADD, g->value_fd, &ev) == -1) {
-        return 2;
+        return -2;
     }
 
     // wait for edge
     while (!finished) {
-        if ((n = epoll_wait(epfd_blocking, &events, 1, -1)) == -1) {
+        if ((n = epoll_wait(epfd_blocking, &events, 1, timeout)) == -1) {
             epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
-            return 2;
+            return -2;
         }
         if (initial_edge) { // first time triggers with current state, so ignore  
             initial_edge = 0;
         } else {
             gettimeofday(&tv_timenow, NULL);
             timenow = tv_timenow.tv_sec*1E6 + tv_timenow.tv_usec;
-            if (g->bouncetime == -666 ||
-            timenow - g->lastcall > g->bouncetime*1000 ||
-              g->lastcall == 0 ||
-              g->lastcall > timenow) {
+            if (g->bouncetime == -666 || timenow - g->lastcall > g->bouncetime*1000 || g->lastcall == 0 || g->lastcall > timenow) {
                 g->lastcall = timenow;
                 finished = 1;
             }
@@ -552,10 +562,14 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime)
         lseek(events.data.fd, 0, SEEK_SET);
         if ((read(events.data.fd, &buf, 1) != 1) || (events.data.fd != g->value_fd)) {
             epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
-            return 2;
+            return -2;
         }
     }
 
     epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
-    return 0;
+    if (n == 0) {
+       return 0; // timeout
+    } else {
+       return 1; // edge found
+    }
 }

@@ -1,4 +1,4 @@
-# rpi_gpio v0.2.0
+# rpi_gpio v0.3.0
 
 Ruby conversion of [RPi.GPIO Python module](https://pypi.python.org/pypi/RPi.GPIO)
 
@@ -8,9 +8,8 @@ Manipulate your Raspberry Pi's GPIO pins from Ruby!
 
 - Boolean input/output
 - Software-driven PWM (written in C for speed)
-- *Upcoming*: event-driven input
 
-Up-to-date with RPi.GPIO Python module version 0.5.11, so it works on all Raspberry Pi models!
+Up-to-date with RPi.GPIO Python module version 0.6.2, so it works on all Raspberry Pi models!
 
 ## Sample Usage
 
@@ -137,6 +136,3 @@ Copyright (c) 2014-2015 [Nick Lowery](https://github.com/ClockVapor)
 
 View LICENSE for full license.
 
-All donations are gratefully accepted. 
-
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=nick%2ea%2elowery%40gmail%2ecom&lc=US&item_name=Nick%20Lowery%3a%20open%2dsource%20software&no_note=0&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHostedGuest"><img alt="Donate here" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"></a>

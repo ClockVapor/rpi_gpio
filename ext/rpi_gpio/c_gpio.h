@@ -1,9 +1,9 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2015 Nick Lowery
+Copyright (c) 2014-2016 Nick Lowery
 
-Copyright (c) 2013-2014 Ben Croston
+Copyright (c) 2013-2015 Ben Croston
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -40,6 +40,8 @@ void cleanup(void);
 #define SETUP_DEVMEM_FAIL 1
 #define SETUP_MALLOC_FAIL 2
 #define SETUP_MMAP_FAIL   3
+#define SETUP_CPUINFO_FAIL 4
+#define SETUP_NOT_RPI_FAIL 5
 
 #define INPUT  1 // is really 0 for control register!
 #define OUTPUT 0 // is really 1 for control register!
