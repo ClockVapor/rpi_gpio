@@ -25,7 +25,7 @@ SOFTWARE.
 */
 
 /* Software PWM using threads */
- 
+
 void pwm_set_duty_cycle(unsigned int gpio, float dutycycle);
 void pwm_set_frequency(unsigned int gpio, float freq);
 void pwm_start(unsigned int gpio);

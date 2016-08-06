@@ -50,7 +50,7 @@ void define_gpio_module_stuff(void)
     // detect board revision and set up accordingly
     if (get_rpi_info(&rpiinfo)) {
         rb_raise(rb_eRuntimeError,
-            "this gem can only be run on a Raspberry Pi");
+                 "this gem can only be run on a Raspberry Pi");
         setup_error = 1;
         return;
     } else if (rpiinfo.p1_revision == 1) {
@@ -73,7 +73,7 @@ int mmap_gpio_mem(void)
     result = setup();
     if (result == SETUP_DEVMEM_FAIL) {
         rb_raise(rb_eRuntimeError, "no access to /dev/mem; try running as "
-            "root");
+                 "root");
         return 1;
     } else if (result == SETUP_MALLOC_FAIL)  {
         rb_raise(rb_eNoMemError, "out of memory");
@@ -98,9 +98,9 @@ int is_gpio_input(unsigned int gpio)
     if (gpio_direction[gpio] != INPUT) {
         if (gpio_direction[gpio] != OUTPUT) {
             rb_raise(rb_eRuntimeError,
-                "you must setup the GPIO channel first with "
-                "RPi::GPIO.setup CHANNEL, :as => :input or "
-                "RPi::GPIO.setup CHANNEL, :as => :output");
+                     "you must setup the GPIO channel first with "
+                     "RPi::GPIO.setup CHANNEL, :as => :input or "
+                     "RPi::GPIO.setup CHANNEL, :as => :output");
             return 0;
         }
 
@@ -116,9 +116,9 @@ int is_gpio_output(unsigned int gpio)
     if (gpio_direction[gpio] != OUTPUT) {
         if (gpio_direction[gpio] != INPUT) {
             rb_raise(rb_eRuntimeError,
-                "you must setup the GPIO channel first with "
-                "RPi::GPIO.setup CHANNEL, :as => :input or "
-                "RPi::GPIO.setup CHANNEL, :as => :output");
+                     "you must setup the GPIO channel first with "
+                     "RPi::GPIO.setup CHANNEL, :as => :input or "
+                     "RPi::GPIO.setup CHANNEL, :as => :output");
             return 0;
         }
 
@@ -133,7 +133,7 @@ int is_rpi(void)
 {
     if (setup_error) {
         rb_raise(rb_eRuntimeError,
-            "this gem can only be run on a Raspberry Pi");
+                 "this gem can only be run on a Raspberry Pi");
         return 0;
     }
 
@@ -153,7 +153,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
         channel = NUM2INT(argv[0]);
     } else if (argc > 1) {
         rb_raise(rb_eArgError, "wrong number of arguments; 0 for all pins, "
-            "1 for a specific pin");
+                 "1 for a specific pin");
         return Qnil;
     }
 
@@ -241,8 +241,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         func = gpio_function(gpio);
         if (gpio_warnings &&
             ((func != 0 && func != 1) ||
-            (gpio_direction[gpio] == -1 && func == 1)))
-        {
+             (gpio_direction[gpio] == -1 && func == 1))) {
             rb_warn("this channel is already in use... continuing anyway. use RPi::GPIO.set_warnings(false) to disable warnings");
         }
 
@@ -250,8 +249,8 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         if (gpio_warnings) {
             if (rpiinfo.p1_revision == 0) { // compute module - do nothing
             } else if ((rpiinfo.p1_revision == 1 &&
-                    (gpio == 0 || gpio == 1)) ||
-                    (gpio == 2 || gpio == 3)) {
+                        (gpio == 0 || gpio == 1)) ||
+                       (gpio == 2 || gpio == 3)) {
                 if (pud == PUD_UP || pud == PUD_DOWN) {
                     rb_warn("a physical pull up resistor is fitted on this channel");
                 }
@@ -270,7 +269,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
 
     // channel
     chan = NUM2INT(channel);
-  
+
 // pin direction
     direction_str = rb_id2name(rb_to_id(rb_hash_aref(hash, ID2SYM(rb_intern("as")))));
     if (strcmp("input", direction_str) == 0) {
@@ -279,7 +278,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         direction = OUTPUT;
     } else {
         rb_raise(rb_eArgError,
-            "invalid pin direction; must be :input or :output");
+                 "invalid pin direction; must be :input or :output");
     }
 
 // pull up, down, or off
@@ -299,7 +298,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
             pud = PUD_OFF;
         } else {
             rb_raise(rb_eArgError,
-                "invalid pin pull direction; must be :up, :down, or :off");
+                     "invalid pin pull direction; must be :up, :down, or :off");
             return Qnil;
         }
     } else {
@@ -320,7 +319,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
             initialize = LOW;
         } else {
             rb_raise(rb_eArgError,
-                "invalid pin initialize state; must be :high or :low");
+                     "invalid pin initialize state; must be :high or :low");
             return Qnil;
         }
     } else {
@@ -365,7 +364,7 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
         new_mode = BCM;
     } else {
         rb_raise(rb_eArgError,
-            "invalid numbering mode; must be :board or :bcm");
+                 "invalid numbering mode; must be :board or :bcm");
     }
 
     if (!is_rpi()) {
@@ -379,11 +378,11 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
 
     if (rpiinfo.p1_revision == 0 && new_mode == BOARD) {
         rb_raise(rb_eRuntimeError, ":board numbering system not applicable on "
-            "compute module");
+                 "compute module");
         return Qnil;
     }
 
-		gpio_mode = new_mode;
+    gpio_mode = new_mode;
     return self;
 }
 
