@@ -31,111 +31,108 @@ VALUE c_PWM = Qnil;
 
 void define_pwm_class_stuff(void)
 {
-  c_PWM = rb_define_class_under(m_GPIO, "PWM", rb_cObject);
-  rb_define_method(c_PWM, "initialize", PWM_initialize, 2);
-  rb_define_method(c_PWM, "start", PWM_start, 1);
-  rb_define_method(c_PWM, "gpio", PWM_get_gpio, 0);
-  rb_define_method(c_PWM, "duty_cycle", PWM_get_duty_cycle, 0);
-  rb_define_method(c_PWM, "duty_cycle=", PWM_set_duty_cycle, 1);
-  rb_define_method(c_PWM, "frequency", PWM_get_frequency, 0);
-  rb_define_method(c_PWM, "frequency=", PWM_set_frequency, 1);
-  rb_define_method(c_PWM, "stop", PWM_stop, 0);
-  rb_define_method(c_PWM, "running?", PWM_get_running, 0);
+    c_PWM = rb_define_class_under(m_GPIO, "PWM", rb_cObject);
+    rb_define_method(c_PWM, "initialize", PWM_initialize, 2);
+    rb_define_method(c_PWM, "start", PWM_start, 1);
+    rb_define_method(c_PWM, "gpio", PWM_get_gpio, 0);
+    rb_define_method(c_PWM, "duty_cycle", PWM_get_duty_cycle, 0);
+    rb_define_method(c_PWM, "duty_cycle=", PWM_set_duty_cycle, 1);
+    rb_define_method(c_PWM, "frequency", PWM_get_frequency, 0);
+    rb_define_method(c_PWM, "frequency=", PWM_set_frequency, 1);
+    rb_define_method(c_PWM, "stop", PWM_stop, 0);
+    rb_define_method(c_PWM, "running?", PWM_get_running, 0);
 }
 
 // RPi::GPIO::PWM#initialize
 VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency)
 {
-  int chan;
-  unsigned int gpio;
-  
-  chan = NUM2INT(channel);
-  
-  // convert channel to gpio
-  if (get_gpio_number(chan, &gpio))
-    return Qnil;
-  
-  // ensure channel is set as output
-  if (gpio_direction[gpio] != OUTPUT)
-  {
-    rb_raise(rb_eRuntimeError, "you must setup the GPIO channel as output "
-      "first with RPi::GPIO.setup CHANNEL, :as => :output");
-      return Qnil;
-  }
-  
-  rb_iv_set(self, "@gpio", UINT2NUM(gpio));
-  rb_iv_set(self, "@running", Qfalse);
-  PWM_set_frequency(self, frequency);
-  return self;
+    int chan;
+    unsigned int gpio;
+
+    chan = NUM2INT(channel);
+
+    // convert channel to gpio
+    if (get_gpio_number(chan, &gpio))
+        return Qnil;
+
+    // ensure channel is set as output
+    if (gpio_direction[gpio] != OUTPUT) {
+        rb_raise(rb_eRuntimeError, "you must setup the GPIO channel as output "
+                 "first with RPi::GPIO.setup CHANNEL, :as => :output");
+        return Qnil;
+    }
+
+    rb_iv_set(self, "@gpio", UINT2NUM(gpio));
+    rb_iv_set(self, "@running", Qfalse);
+    PWM_set_frequency(self, frequency);
+    return self;
 }
 
 // RPi::GPIO::PWM#start
 VALUE PWM_start(VALUE self, VALUE duty_cycle)
 {
-  pwm_start(NUM2UINT(rb_iv_get(self, "@gpio")));
-  PWM_set_duty_cycle(self, duty_cycle);
-  rb_iv_set(self, "@running", Qtrue);
-  return self;
+    pwm_start(NUM2UINT(rb_iv_get(self, "@gpio")));
+    PWM_set_duty_cycle(self, duty_cycle);
+    rb_iv_set(self, "@running", Qtrue);
+    return self;
 }
 
 // RPi::GPIO::PWM#gpio
 VALUE PWM_get_gpio(VALUE self)
 {
-  return rb_iv_get(self, "@gpio");
+    return rb_iv_get(self, "@gpio");
 }
 
 // RPi::GPIO::PWM#duty_cycle
 VALUE PWM_get_duty_cycle(VALUE self)
 {
-  return rb_iv_get(self, "@duty_cycle");
+    return rb_iv_get(self, "@duty_cycle");
 }
 
 // RPi::GPIO::PWM#duty_cycle=
 VALUE PWM_set_duty_cycle(VALUE self, VALUE duty_cycle)
 {
-  float dc = (float) NUM2DBL(duty_cycle);
-  if (dc < 0.0f || dc > 100.0f)
-  {
-    rb_raise(rb_eArgError, "duty cycle must be between 0.0 and 100.0");
-    return Qnil;
-  }
-  
-  rb_iv_set(self, "@duty_cycle", duty_cycle);
-  pwm_set_duty_cycle(NUM2UINT(rb_iv_get(self, "@gpio")), dc);
-  return self;
+    float dc = (float) NUM2DBL(duty_cycle);
+    if (dc < 0.0f || dc > 100.0f) {
+        rb_raise(rb_eArgError, "duty cycle must be between 0.0 and 100.0");
+        return Qnil;
+    }
+
+    rb_iv_set(self, "@duty_cycle", duty_cycle);
+    pwm_set_duty_cycle(NUM2UINT(rb_iv_get(self, "@gpio")), dc);
+    return self;
 }
 
 // RPi::GPIO::PWM#frequency
 VALUE PWM_get_frequency(VALUE self)
 {
-  return rb_iv_get(self, "@frequency");
+    return rb_iv_get(self, "@frequency");
 }
 
 // RPi::GPIO::PWM#frequency=
 VALUE PWM_set_frequency(VALUE self, VALUE frequency)
 {
-  float freq = (float) NUM2DBL(frequency);
-  if (freq <= 0.0f)
-  {
-    rb_raise(rb_eArgError, "frequency must be greater than 0.0");
-    return Qnil;
-  }
-  
-  rb_iv_set(self, "@frequency", frequency);
-  pwm_set_frequency(NUM2UINT(rb_iv_get(self, "@gpio")), freq);
-  return self;
+    float freq = (float) NUM2DBL(frequency);
+    if (freq <= 0.0f) {
+        rb_raise(rb_eArgError, "frequency must be greater than 0.0");
+        return Qnil;
+    }
+
+    rb_iv_set(self, "@frequency", frequency);
+    pwm_set_frequency(NUM2UINT(rb_iv_get(self, "@gpio")), freq);
+    return self;
 }
 
 // RPi::GPIO::PWM#stop
 VALUE PWM_stop(VALUE self)
 {
-  pwm_stop(NUM2UINT(rb_iv_get(self, "@gpio")));
-  rb_iv_set(self, "@running", Qfalse);
-  return self;
+    pwm_stop(NUM2UINT(rb_iv_get(self, "@gpio")));
+    rb_iv_set(self, "@running", Qfalse);
+    return self;
 }
 
 // RPi::GPIO::PWM#running?
 VALUE PWM_get_running(VALUE self)
 {
-  return rb_iv_get(self, "@running");
+    return rb_iv_get(self, "@running");
 }

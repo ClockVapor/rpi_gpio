@@ -31,8 +31,7 @@ SOFTWARE.
 #include "soft_pwm.h"
 pthread_t threads;
 
-struct pwm
-{
+struct pwm {
     unsigned int gpio;
     float freq;
     float dutycycle;
@@ -50,10 +49,8 @@ void remove_pwm(unsigned int gpio)
     struct pwm *prev = NULL;
     struct pwm *temp;
 
-    while (p != NULL)
-    {
-        if (p->gpio == gpio)
-        {
+    while (p != NULL) {
+        if (p->gpio == gpio) {
             if (prev == NULL)
                 pwm_list = p->next;
             else
@@ -95,17 +92,14 @@ void *pwm_thread(void *threadarg)
 {
     struct pwm *p = (struct pwm *)threadarg;
 
-    while (p->running)
-    {
+    while (p->running) {
 
-        if (p->dutycycle > 0.0)
-        {
+        if (p->dutycycle > 0.0) {
             output_gpio(p->gpio, 1);
             full_sleep(&p->req_on);
         }
 
-        if (p->dutycycle < 100.0)
-        {
+        if (p->dutycycle < 100.0) {
             output_gpio(p->gpio, 0);
             full_sleep(&p->req_off);
         }
@@ -138,18 +132,15 @@ struct pwm *find_pwm(unsigned int gpio)
 {
     struct pwm *p = pwm_list;
 
-    if (pwm_list == NULL)
-    {
+    if (pwm_list == NULL) {
         pwm_list = add_new_pwm(gpio);
         return pwm_list;
     }
 
-    while (p != NULL)
-    {
+    while (p != NULL) {
         if (p->gpio == gpio)
             return p;
-        if (p->next == NULL)
-        {
+        if (p->next == NULL) {
             p->next = add_new_pwm(gpio);
             return p->next;
         }
@@ -162,14 +153,12 @@ void pwm_set_duty_cycle(unsigned int gpio, float dutycycle)
 {
     struct pwm *p;
 
-    if (dutycycle < 0.0 || dutycycle > 100.0)
-    {
+    if (dutycycle < 0.0 || dutycycle > 100.0) {
         // btc fixme - error
         return;
     }
 
-    if ((p = find_pwm(gpio)) != NULL)
-    {
+    if ((p = find_pwm(gpio)) != NULL) {
         p->dutycycle = dutycycle;
         calculate_times(p);
     }
@@ -179,14 +168,12 @@ void pwm_set_frequency(unsigned int gpio, float freq)
 {
     struct pwm *p;
 
-    if (freq <= 0.0) // to avoid divide by zero
-    {
+    if (freq <= 0.0) { // to avoid divide by zero
         // btc fixme - error
         return;
     }
 
-    if ((p = find_pwm(gpio)) != NULL)
-    {
+    if ((p = find_pwm(gpio)) != NULL) {
         p->basetime = 1000.0 / freq;    // calculated in ms
         p->slicetime = p->basetime / 100.0;
         calculate_times(p);
@@ -201,8 +188,7 @@ void pwm_start(unsigned int gpio)
         return;
 
     p->running = 1;
-    if (pthread_create(&threads, NULL, pwm_thread, (void *)p) != 0)
-    {
+    if (pthread_create(&threads, NULL, pwm_thread, (void *)p) != 0) {
         // btc fixme - error
         p->running = 0;
         return;
