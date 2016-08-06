@@ -45,8 +45,7 @@ int check_gpio_priv(void)
 
     // check mmap setup has worked
     if (!module_setup) {
-        rb_raise(rb_eRuntimeError, "no access to /dev/mem.  Try "
-                 "running as root!");
+        rb_raise(rb_eRuntimeError, "no access to /dev/mem.  Try running as root!");
         return 2;
     }
     return 0;
@@ -56,9 +55,7 @@ int get_gpio_number(int channel, unsigned int *gpio)
 {
     // check setmode() has been run
     if (gpio_mode != BOARD && gpio_mode != BCM) {
-        rb_raise(rb_eRuntimeError, "please set pin numbering mode "
-                 "using RPi::GPIO.set_numbering :board or "
-                 "RPi::GPIO.set_numbering :bcm");
+        rb_raise(rb_eRuntimeError, "please set pin numbering mode using RPi::GPIO.set_numbering :board or RPi::GPIO.set_numbering :bcm");
         return 3;
     }
 

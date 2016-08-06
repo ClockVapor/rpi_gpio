@@ -57,8 +57,7 @@ VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency)
 
     // ensure channel is set as output
     if (gpio_direction[gpio] != OUTPUT) {
-        rb_raise(rb_eRuntimeError, "you must setup the GPIO channel as output "
-                 "first with RPi::GPIO.setup CHANNEL, :as => :output");
+        rb_raise(rb_eRuntimeError, "you must setup the GPIO channel as output first with RPi::GPIO.setup CHANNEL, :as => :output");
         return Qnil;
     }
 

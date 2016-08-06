@@ -49,8 +49,7 @@ void define_gpio_module_stuff(void)
 
     // detect board revision and set up accordingly
     if (get_rpi_info(&rpiinfo)) {
-        rb_raise(rb_eRuntimeError,
-                 "this gem can only be run on a Raspberry Pi");
+        rb_raise(rb_eRuntimeError, "this gem can only be run on a Raspberry Pi");
         setup_error = 1;
         return;
     } else if (rpiinfo.p1_revision == 1) {
@@ -97,10 +96,7 @@ int is_gpio_input(unsigned int gpio)
 {
     if (gpio_direction[gpio] != INPUT) {
         if (gpio_direction[gpio] != OUTPUT) {
-            rb_raise(rb_eRuntimeError,
-                     "you must setup the GPIO channel first with "
-                     "RPi::GPIO.setup CHANNEL, :as => :input or "
-                     "RPi::GPIO.setup CHANNEL, :as => :output");
+            rb_raise(rb_eRuntimeError, "you must setup the GPIO channel first with RPi::GPIO.setup CHANNEL, :as => :input or RPi::GPIO.setup CHANNEL, :as => :output");
             return 0;
         }
 
@@ -115,10 +111,7 @@ int is_gpio_output(unsigned int gpio)
 {
     if (gpio_direction[gpio] != OUTPUT) {
         if (gpio_direction[gpio] != INPUT) {
-            rb_raise(rb_eRuntimeError,
-                     "you must setup the GPIO channel first with "
-                     "RPi::GPIO.setup CHANNEL, :as => :input or "
-                     "RPi::GPIO.setup CHANNEL, :as => :output");
+            rb_raise(rb_eRuntimeError, "you must setup the GPIO channel first with RPi::GPIO.setup CHANNEL, :as => :input or RPi::GPIO.setup CHANNEL, :as => :output");
             return 0;
         }
 
@@ -132,8 +125,7 @@ int is_gpio_output(unsigned int gpio)
 int is_rpi(void)
 {
     if (setup_error) {
-        rb_raise(rb_eRuntimeError,
-                 "this gem can only be run on a Raspberry Pi");
+        rb_raise(rb_eRuntimeError, "this gem can only be run on a Raspberry Pi");
         return 0;
     }
 
@@ -152,8 +144,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
     if (argc == 1) {
         channel = NUM2INT(argv[0]);
     } else if (argc > 1) {
-        rb_raise(rb_eArgError, "wrong number of arguments; 0 for all pins, "
-                 "1 for a specific pin");
+        rb_raise(rb_eArgError, "wrong number of arguments; 0 for all pins, 1 for a specific pin");
         return Qnil;
     }
 
@@ -277,8 +268,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
     } else if (strcmp("output", direction_str) == 0) {
         direction = OUTPUT;
     } else {
-        rb_raise(rb_eArgError,
-                 "invalid pin direction; must be :input or :output");
+        rb_raise(rb_eArgError, "invalid pin direction; must be :input or :output");
     }
 
 // pull up, down, or off
@@ -297,8 +287,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         } else if (strcmp("off", pud_str) == 0) {
             pud = PUD_OFF;
         } else {
-            rb_raise(rb_eArgError,
-                     "invalid pin pull direction; must be :up, :down, or :off");
+            rb_raise(rb_eArgError, "invalid pin pull direction; must be :up, :down, or :off");
             return Qnil;
         }
     } else {
@@ -318,8 +307,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         } else if (strcmp("low", initialize_str) == 0) {
             initialize = LOW;
         } else {
-            rb_raise(rb_eArgError,
-                     "invalid pin initialize state; must be :high or :low");
+            rb_raise(rb_eArgError, "invalid pin initialize state; must be :high or :low");
             return Qnil;
         }
     } else {
@@ -363,8 +351,7 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
     } else if (strcmp(mode_str, "bcm") == 0) {
         new_mode = BCM;
     } else {
-        rb_raise(rb_eArgError,
-                 "invalid numbering mode; must be :board or :bcm");
+        rb_raise(rb_eArgError, "invalid numbering mode; must be :board or :bcm");
     }
 
     if (!is_rpi()) {
@@ -377,8 +364,7 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
     }
 
     if (rpiinfo.p1_revision == 0 && new_mode == BOARD) {
-        rb_raise(rb_eRuntimeError, ":board numbering system not applicable on "
-                 "compute module");
+        rb_raise(rb_eRuntimeError, ":board numbering system not applicable on compute module");
         return Qnil;
     }
 
