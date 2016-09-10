@@ -26,13 +26,14 @@ SOFTWARE.
 
 #ifndef CPUINFO_H
 #define CPUINFO_H
-typedef struct {
-    int p1_revision;
-    char *ram;
-    char *manufacturer;
-    char *processor;
-    char *type;
-    char revision[1024];
+typedef struct
+{
+   int p1_revision;
+   char *ram;
+   char *manufacturer;
+   char *processor;
+   char *type;
+   char revision[1024];
 } rpi_info;
 #endif /* CPUINFO_H */
 

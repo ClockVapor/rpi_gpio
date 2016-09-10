@@ -36,7 +36,8 @@ SOFTWARE.
 
 const char *stredge[4] = {"none", "rising", "falling", "both"};
 
-struct gpios {
+struct gpios
+{
     unsigned int gpio;
     int value_fd;
     int exported;
@@ -51,7 +52,8 @@ struct gpios {
 struct gpios *gpio_list = NULL;
 
 // event callbacks
-struct callback {
+struct callback
+{
     unsigned int gpio;
     void (*func)(unsigned int gpio);
     struct callback *next;
@@ -71,7 +73,7 @@ int gpio_export(unsigned int gpio)
     char str_gpio[3];
 
     if ((fd = open("/sys/class/gpio/export", O_WRONLY)) < 0)
-        return -1;
+       return -1;
 
     len = snprintf(str_gpio, sizeof(str_gpio), "%d", gpio);
     write(fd, str_gpio, len);
@@ -170,7 +172,7 @@ struct gpios *get_gpio_from_value_fd(int fd)
     struct gpios *g = gpio_list;
     while (g != NULL) {
         if (g->value_fd == fd)
-            return g;
+           return g;
         g = g->next;
     }
     return NULL;
@@ -292,7 +294,8 @@ int callback_exists(unsigned int gpio)
 void run_callbacks(unsigned int gpio)
 {
     struct callback *cb = callbacks;
-    while (cb != NULL) {
+    while (cb != NULL)
+    {
         if (cb->gpio == gpio)
             cb->func(cb->gpio);
         cb = cb->next;
@@ -305,8 +308,10 @@ void remove_callbacks(unsigned int gpio)
     struct callback *temp;
     struct callback *prev = NULL;
 
-    while (cb != NULL) {
-        if (cb->gpio == gpio) {
+    while (cb != NULL)
+    {
+        if (cb->gpio == gpio)
+        {
             if (prev == NULL)
                 callbacks = cb->next;
             else
@@ -410,22 +415,22 @@ void event_cleanup(unsigned int gpio)
     while (g != NULL) {
         if ((gpio == -666) || (g->gpio == gpio))
             temp = g->next;
-        remove_edge_detect(g->gpio);
-        g = temp;
+            remove_edge_detect(g->gpio);
+            g = temp;
     }
     if (gpio_list == NULL)
         if (epfd_blocking != -1)
             close(epfd_blocking);
-    epfd_blocking = -1;
-    if (epfd_thread != -1)
-        close(epfd_thread);
-    epfd_thread = -1;
-    thread_running = 0;
+            epfd_blocking = -1;
+        if (epfd_thread != -1)
+            close(epfd_thread);
+            epfd_thread = -1;
+        thread_running = 0;
 }
 
 void event_cleanup_all(void)
 {
-    event_cleanup(-666);
+   event_cleanup(-666);
 }
 
 int add_edge_detect(unsigned int gpio, unsigned int edge, int bouncetime)
@@ -473,8 +478,8 @@ int add_edge_detect(unsigned int gpio, unsigned int edge, int bouncetime)
     // start poll thread if it is not already running
     if (!thread_running) {
         if (pthread_create(&threads, NULL, poll_thread, (void *)t) != 0) {
-            remove_edge_detect(gpio);
-            return 2;
+           remove_edge_detect(gpio);
+           return 2;
         }
     }
     return 0;
@@ -540,7 +545,7 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime,
             epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
             return -2;
         }
-        if (initial_edge) { // first time triggers with current state, so ignore
+        if (initial_edge) { // first time triggers with current state, so ignore  
             initial_edge = 0;
         } else {
             gettimeofday(&tv_timenow, NULL);
@@ -563,8 +568,8 @@ int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int bouncetime,
 
     epoll_ctl(epfd_blocking, EPOLL_CTL_DEL, g->value_fd, &ev);
     if (n == 0) {
-        return 0; // timeout
+       return 0; // timeout
     } else {
-        return 1; // edge found
+       return 1; // edge found
     }
 }
