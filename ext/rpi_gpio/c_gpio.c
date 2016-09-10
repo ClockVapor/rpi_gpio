@@ -74,7 +74,8 @@ int setup(void)
     int found = 0;
 
     // try /dev/gpiomem first - this does not require root privs
-    if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC)) > 0) {
+    if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC)) > 0)
+    {
         gpio_map = (uint32_t *)mmap(NULL, BLOCK_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, 0);
         if ((uint32_t)gpio_map < 0) {
             return SETUP_MMAP_FAIL;
@@ -159,7 +160,7 @@ int eventdetected(int gpio)
     value = *(gpio_map+offset) & bit;
     if (value) {
         clear_event_detect(gpio);
-    }
+	  }
     return value;
 }
 
@@ -199,7 +200,7 @@ void set_high_event(int gpio, int enable)
         *(gpio_map+offset) |= (1 << shift);
     } else {
         *(gpio_map+offset) &= ~(1 << shift);
-    }
+	  }
     clear_event_detect(gpio);
 }
 
@@ -222,14 +223,14 @@ void set_pullupdn(int gpio, int pud)
     int shift = (gpio%32);
 
     if (pud == PUD_DOWN) {
-        *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) |
-                                      PUD_DOWN;
+        *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | 
+            PUD_DOWN;
     } else if (pud == PUD_UP) {
         *(gpio_map+PULLUPDN_OFFSET) = (*(gpio_map+PULLUPDN_OFFSET) & ~3) | PUD_UP;
     } else {  // pud == PUD_OFF
         *(gpio_map+PULLUPDN_OFFSET) &= ~3;
     }
-
+    
     short_wait();
     *(gpio_map+clk_offset) = 1 << shift;
     short_wait();
@@ -269,7 +270,7 @@ void output_gpio(int gpio, int value)
     } else {       // value == LOW
         offset = CLR_OFFSET + (gpio/32);
     }
-
+    
     shift = (gpio%32);
 
     *(gpio_map+offset) = 1 << shift;
@@ -277,12 +278,12 @@ void output_gpio(int gpio, int value)
 
 int input_gpio(int gpio)
 {
-    int offset, value, mask;
+   int offset, value, mask;
 
-    offset = PINLEVEL_OFFSET + (gpio/32);
-    mask = (1 << gpio%32);
-    value = *(gpio_map+offset) & mask;
-    return value;
+   offset = PINLEVEL_OFFSET + (gpio/32);
+   mask = (1 << gpio%32);
+   value = *(gpio_map+offset) & mask;
+   return value;
 }
 
 void cleanup(void)

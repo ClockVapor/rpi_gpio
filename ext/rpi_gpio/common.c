@@ -38,14 +38,17 @@ int module_setup = 0;
 int check_gpio_priv(void)
 {
     // check module has been imported cleanly
-    if (setup_error) {
+    if (setup_error)
+    {
         rb_raise(rb_eRuntimeError, "gem not imported correctly!");
         return 1;
     }
 
     // check mmap setup has worked
-    if (!module_setup) {
-        rb_raise(rb_eRuntimeError, "no access to /dev/mem.  Try running as root!");
+    if (!module_setup)
+    {
+        rb_raise(rb_eRuntimeError, "no access to /dev/mem.  Try "
+          "running as root!");
         return 2;
     }
     return 0;
@@ -54,31 +57,39 @@ int check_gpio_priv(void)
 int get_gpio_number(int channel, unsigned int *gpio)
 {
     // check setmode() has been run
-    if (gpio_mode != BOARD && gpio_mode != BCM) {
-        rb_raise(rb_eRuntimeError, "please set pin numbering mode using RPi::GPIO.set_numbering :board or RPi::GPIO.set_numbering :bcm");
+    if (gpio_mode != BOARD && gpio_mode != BCM)
+    {
+        rb_raise(rb_eRuntimeError, "please set pin numbering mode "
+          "using RPi::GPIO.set_numbering :board or "
+          "RPi::GPIO.set_numbering :bcm");
         return 3;
     }
 
     // check channel number is in range
     if ( (gpio_mode == BCM && (channel < 0 || channel > 53))
-         || (gpio_mode == BOARD && (channel < 1 || channel > 26) &&
-             rpiinfo.p1_revision != 3)
-         || (gpio_mode == BOARD && (channel < 1 || channel > 40) &&
-             rpiinfo.p1_revision == 3)) {
+      || (gpio_mode == BOARD && (channel < 1 || channel > 26) && 
+          rpiinfo.p1_revision != 3)
+      || (gpio_mode == BOARD && (channel < 1 || channel > 40) &&
+          rpiinfo.p1_revision == 3))
+    {
         rb_raise(rb_eArgError, "the channel sent is invalid on a Raspberry Pi");
         return 4;
     }
 
     // convert channel to gpio
-    if (gpio_mode == BOARD) {
-        if (*(*pin_to_gpio+channel) == -1) {
+    if (gpio_mode == BOARD)
+    {
+        if (*(*pin_to_gpio+channel) == -1)
+        {
             rb_raise(rb_eArgError, "the channel sent is invalid on a Raspberry "
-                     "Pi");
+              "Pi");
             return 5;
         } else {
             *gpio = *(*pin_to_gpio+channel);
         }
-    } else { // gpio_mode == BCM
+    }
+    else // gpio_mode == BCM
+    {
         *gpio = channel;
     }
 
