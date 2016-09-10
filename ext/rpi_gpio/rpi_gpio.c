@@ -33,13 +33,13 @@ VALUE m_GPIO = Qnil;
 
 void Init_rpi_gpio()
 {
-    define_modules();
-    define_gpio_module_stuff();
-    define_pwm_class_stuff();
+  define_modules();
+  define_gpio_module_stuff();
+  define_pwm_class_stuff();
 }
 
 void define_modules(void)
 {
-    m_RPi = rb_define_module("RPi");
-    m_GPIO = rb_define_module_under(m_RPi, "GPIO");
+  m_RPi = rb_define_module("RPi");
+  m_GPIO = rb_define_module_under(m_RPi, "GPIO");
 }
