@@ -253,6 +253,9 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
             }
         }
 
+        if (direction == OUTPUT && (initialize == LOW || initialize == HIGH)) {
+            output_gpio(gpio, initialize);
+        }
         setup_gpio(gpio, direction, pud);
         gpio_direction[gpio] = direction;
         return 1;
