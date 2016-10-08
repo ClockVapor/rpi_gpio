@@ -221,6 +221,10 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
     const char *pud_str = NULL;
     int pud = PUD_OFF;
     int func;
+
+    VALUE initialize_val = Qnil;
+    const char *initialize_str = NULL;
+    int initialize = HIGH;
   
     // func to set up channel stored in channel variable
     int setup_one(void) {
