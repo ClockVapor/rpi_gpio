@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'rpi_gpio'
-  s.version = '0.3.0'
+  s.version = '0.3.2'
   s.licenses = ['MIT']
   s.summary = 'Ruby conversion of RPi.GPIO Python module'
   s.description = s.summary
