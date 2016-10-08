@@ -97,7 +97,7 @@ int is_gpio_input(unsigned int gpio)
 {
     if (gpio_direction[gpio] != INPUT) {
         if (gpio_direction[gpio] != OUTPUT) {
-            rb_raise(rb_eRuntimeError, 
+            rb_raise(rb_eRuntimeError,
                 "you must setup the GPIO channel first with "
                 "RPi::GPIO.setup CHANNEL, :as => :input or "
                 "RPi::GPIO.setup CHANNEL, :as => :output");
@@ -232,16 +232,16 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         func = gpio_function(gpio);
         if (gpio_warnings &&
             ((func != 0 && func != 1) ||
-            (gpio_direction[gpio] == -1 && func == 1))) {
-            rb_warn("this channel is already in use... continuing anyway. "
-                "use RPi::GPIO.set_warnings(false) to disable warnings");
+            (gpio_direction[gpio] == -1 && func == 1)))
+        {
+            rb_warn("this channel is already in use... continuing anyway. use RPi::GPIO.set_warnings(false) to disable warnings");
         }
         
         if (gpio_warnings) {
             if (rpiinfo.p1_revision == 0) { // compute module - do nothing
-            } else if ((rpiinfo.p1_revision == 1 && 
-                (gpio == 0 || gpio == 1)) ||
-                (gpio == 2 || gpio == 3)) {
+            } else if ((rpiinfo.p1_revision == 1 &&
+                    (gpio == 0 || gpio == 1)) ||
+                    (gpio == 2 || gpio == 3)) {
                 if (pud == PUD_UP || pud == PUD_DOWN) {
                     rb_warn("a physical pull up resistor is fitted on "
                         "this channel");
@@ -260,15 +260,14 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
     chan = NUM2INT(channel);
   
     // pin direction
-    direction_str = rb_id2name(rb_to_id(rb_hash_aref(hash,
-        ID2SYM(rb_intern("as")))));
+    direction_str = rb_id2name(rb_to_id(rb_hash_aref(hash, ID2SYM(rb_intern("as")))));
     if (strcmp("input", direction_str) == 0) {
         direction = INPUT;
     } else if (strcmp("output", direction_str) == 0) {
         direction = OUTPUT;
     } else {
-        rb_raise(rb_eArgError, 
-            "invalid pin direction; must be :input or :output");   
+        rb_raise(rb_eArgError,
+            "invalid pin direction; must be :input or :output");
     }
    
     // pull up, down, or off
@@ -293,6 +292,27 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         }
     } else {
         pud = PUD_OFF;
+    }
+    // initialize high or low
+    initialize_val = rb_hash_aref(hash, ID2SYM(rb_intern("initialize")));
+    if (initialize_val != Qnil) {
+        if (direction == INPUT) {
+            rb_raise(rb_eArgError, "input pins cannot use initial argument");
+            return Qnil;
+        }
+
+        initialize_str = rb_id2name(rb_to_id(initialize_val));
+        if (strcmp("high", initialize_str) == 0) {
+            initialize = HIGH;
+        } else if (strcmp("low", initialize_str) == 0) {
+            initialize = LOW;
+        } else {
+            rb_raise(rb_eArgError,
+                "invalid pin initialize state; must be :high or :low");
+            return Qnil;
+        }
+    } else {
+        initialize = HIGH;
     }
 
     if (!is_rpi() || mmap_gpio_mem()) {
@@ -332,7 +352,7 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
     } else if (strcmp(mode_str, "bcm") == 0) {
         new_mode = BCM;
     } else {
-        rb_raise(rb_eArgError, 
+        rb_raise(rb_eArgError,
             "invalid numbering mode; must be :board or :bcm");
     }
       
@@ -351,7 +371,7 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
         return Qnil;
     }
 
-		gpio_mode = new_mode;
+    gpio_mode = new_mode;
     return self;
 }
 
