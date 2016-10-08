@@ -1,4 +1,4 @@
-# rpi_gpio v0.3.0
+# rpi_gpio v0.3.1
 
 Ruby conversion of [RPi.GPIO Python module](https://pypi.python.org/pypi/RPi.GPIO)
 
@@ -69,6 +69,13 @@ RPi::GPIO.set_high PIN_NUM
 RPi::GPIO.set_low PIN_NUM
 ```
 to set the pin either high or low.
+
+You can use the additional hash argument `:initialize` to set the pin's initial state like so:
+```ruby
+RPi::GPIO.setup PIN_NUM, :as => :output, :initialize => :high
+# or
+RPi::GPIO.setup PIN_NUM, :as => :output, :initialize => :low
+```
 
 #### PWM (pulse-width modulation)
 
