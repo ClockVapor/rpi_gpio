@@ -49,8 +49,7 @@ void define_gpio_module_stuff(void)
 
     // detect board revision and set up accordingly
     if (get_rpi_info(&rpiinfo)) {
-        rb_raise(rb_eRuntimeError,
-            "this gem can only be run on a Raspberry Pi");
+        rb_warn("couldn't determine Raspberry Pi hardware.");
         setup_error = 1;
         return;
     } else if (rpiinfo.p1_revision == 1) {
