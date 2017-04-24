@@ -33,7 +33,7 @@ SOFTWARE.
 
 void define_gpio_module_stuff(void);
 int mmap_gpio_mem(void);
-int is_gpio_input(unsigned int gpio);
+int is_gpio_initialized(unsigned int gpio);
 int is_gpio_output(unsigned int gpio);
 int is_rpi(void);
 VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self);

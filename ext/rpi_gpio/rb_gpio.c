@@ -91,18 +91,13 @@ int mmap_gpio_mem(void)
     }
 }
 
-int is_gpio_input(unsigned int gpio)
+int is_gpio_initialized(unsigned int gpio)
 {
-    if (gpio_direction[gpio] != INPUT) {
-        if (gpio_direction[gpio] != OUTPUT) {
-            rb_raise(rb_eRuntimeError,
-                "you must setup the GPIO channel first with "
-                "RPi::GPIO.setup CHANNEL, :as => :input or "
-                "RPi::GPIO.setup CHANNEL, :as => :output");
-            return 0;
-        }
-
-        rb_raise(rb_eRuntimeError, "GPIO channel not setup as input");
+    if (gpio_direction[gpio] != INPUT && gpio_direction[gpio] != OUTPUT) {
+				rb_raise(rb_eRuntimeError,
+						"you must setup the GPIO channel first with "
+						"RPi::GPIO.setup CHANNEL, :as => :input or "
+						"RPi::GPIO.setup CHANNEL, :as => :output");
         return 0;
     }
 
@@ -163,7 +158,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
             event_cleanup_all();
 
             // set everything back to input
-            for (i=0; i<54; i++) {
+            for (i = 0; i < 54; i++) {
                 if (gpio_direction[i] != -1) {
                     setup_gpio(i, INPUT, PUD_OFF);
                     gpio_direction[i] = -1;
@@ -269,8 +264,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
     } else if (strcmp("output", direction_str) == 0) {
         direction = OUTPUT;
     } else {
-        rb_raise(rb_eArgError,
-            "invalid pin direction; must be :input or :output");
+        rb_raise(rb_eArgError, "invalid pin direction; must be :input or :output");
     }
    
     // pull up, down, or off
@@ -380,9 +374,7 @@ VALUE GPIO_set_high(VALUE self, VALUE channel)
     unsigned int gpio;
     int chan = NUM2INT(channel);
 
-    if (get_gpio_number(chan, &gpio) ||
-        !is_gpio_output(gpio) ||
-        check_gpio_priv()) {
+    if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
         return Qnil;
     }
 
@@ -396,9 +388,7 @@ VALUE GPIO_set_low(VALUE self, VALUE channel)
     unsigned int gpio;
     int chan = NUM2INT(channel);
 
-    if (get_gpio_number(chan, &gpio) ||
-        !is_gpio_output(gpio) ||
-        check_gpio_priv()) {
+    if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
         return Qnil;
     }
 
@@ -411,8 +401,7 @@ VALUE GPIO_test_high(VALUE self, VALUE channel)
 {
     unsigned int gpio;
   
-    if (get_gpio_number(NUM2INT(channel), &gpio) ||
-        check_gpio_priv()) {
+    if (get_gpio_number(NUM2INT(channel), &gpio) || !is_gpio_initialized(gpio) || check_gpio_priv()) {
         return Qnil;
     }
  
