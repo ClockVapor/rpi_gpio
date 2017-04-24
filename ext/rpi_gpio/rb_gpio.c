@@ -207,10 +207,10 @@ VALUE GPIO_reset(VALUE self)
 }
 
 // RPi::GPIO.setup(channel, hash(:as => {:input, :output}, :pull => {:off, 
-// :down, :up}(default :off)))
+// :down, :up}(default :off), :initialize => {:high, :low}))
 //
-// sets up a channel as either input or output, with an option pull-down or
-// pull-up resistor.
+// sets up a channel as either input or output with an optional pull-down or
+// pull-up resistor and an optional initialize state
 VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
 {
     unsigned int gpio;
@@ -420,7 +420,6 @@ VALUE GPIO_test_high(VALUE self, VALUE channel)
     unsigned int gpio;
   
     if (get_gpio_number(NUM2INT(channel), &gpio) ||
-        !is_gpio_input(gpio) ||
         check_gpio_priv()) {
         return Qnil;
     }
