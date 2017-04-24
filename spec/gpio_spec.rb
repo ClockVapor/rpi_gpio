@@ -166,7 +166,7 @@ describe RPi::GPIO do
       context "given a valid channel set to the opposite direction" do
         before :each do
           RPi::GPIO.setup 18, :as => :output
-          expect { RPi::GPIO.high? 18 } .to raise_error RuntimeError
+          expect { RPi::GPIO.high? 18 } .to_not raise_error
         end
 
         it "doesn't raise an error" do
@@ -307,8 +307,8 @@ describe RPi::GPIO do
           RPi::GPIO.setup 18, :as => :output
         end
 
-        it "raises an error" do
-          expect { RPi::GPIO.high? 18 } .to raise_error RuntimeError
+        it "doesn't raise an error" do
+          expect { RPi::GPIO.high? 18 } .to_not raise_error
         end
       end
 
@@ -353,8 +353,8 @@ describe RPi::GPIO do
           RPi::GPIO.setup 18, :as => :output
         end
 
-        it "raises an error" do
-          expect { RPi::GPIO.low? 18 } .to raise_error RuntimeError
+        it "doesn't raise an error" do
+          expect { RPi::GPIO.low? 18 } .to_not raise_error 
         end
       end
 
