@@ -29,6 +29,21 @@ SOFTWARE.
 extern VALUE m_GPIO;
 int gpio_warnings = 1;
 
+VALUE _extract_channels(VALUE channel_or_list)
+{
+    VALUE channel_list;
+
+    // parse arguments
+    if (RB_TYPE_P(channel_or_list, T_ARRAY) == 1) {
+        channel_list = channel_or_list;
+    } else {
+        channel_list = rb_ary_new();
+        rb_ary_push(channel_list, channel_or_list);
+    }
+
+    return channel_list;
+}
+
 void define_gpio_module_stuff(void)
 {
     int i;
@@ -206,8 +221,8 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
 {
     unsigned int gpio;
     int chan = -1;
-    int chan_count = 0;
-    VALUE channel_list;
+    VALUE channel_list = _extract_channels(channel);
+    int chan_count = RARRAY_LEN(channel_list);
     const char *direction_str = NULL;
     int direction;
     VALUE pud_val = Qnil;
@@ -252,16 +267,6 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         setup_gpio(gpio, direction, pud);
         gpio_direction[gpio] = direction;
         return 1;
-    }
-
-    // parse arguments
-    if (RB_TYPE_P(channel, T_ARRAY) == 1) {
-      chan_count = RARRAY_LEN(channel);
-      channel_list = channel;
-    } else {
-      chan_count = 1;
-      channel_list = rb_ary_new();
-      rb_ary_push(channel_list, channel);
     }
 
     // pin direction
@@ -383,18 +388,8 @@ VALUE GPIO_set_high(VALUE self, VALUE channel)
 {
     unsigned int gpio;
     int chan = -1;
-    int chan_count = 0;
-    VALUE channel_list;
-
-    // parse arguments
-    if (RB_TYPE_P(channel, T_ARRAY) == 1) {
-      chan_count = RARRAY_LEN(channel);
-      channel_list = channel;
-    } else {
-      chan_count = 1;
-      channel_list = rb_ary_new();
-      rb_ary_push(channel_list, channel);
-    }
+    VALUE channel_list = _extract_channels(channel);
+    int chan_count = RARRAY_LEN(channel_list);
 
     for (int i = 0; i < chan_count; i++) {
       chan = NUM2INT(rb_ary_entry(channel_list, i));
@@ -411,15 +406,21 @@ VALUE GPIO_set_high(VALUE self, VALUE channel)
 // RPi::GPIO.set_low(channel)
 VALUE GPIO_set_low(VALUE self, VALUE channel)
 {
-    unsigned int gpio;
-    int chan = NUM2INT(channel);
+  unsigned int gpio;
+  int chan = -1;
+  VALUE channel_list = _extract_channels(channel);
+  int chan_count = RARRAY_LEN(channel_list);
 
+  for (int i = 0; i < chan_count; i++) {
+    chan = NUM2INT(rb_ary_entry(channel_list, i));
     if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
-        return Qnil;
+      return Qnil;
+    } else {
+      output_gpio(gpio, 0);
     }
+  }
 
-    output_gpio(gpio, 0);
-    return self;
+  return self;
 }
 
 // RPi::GPIO.high?(channel)
