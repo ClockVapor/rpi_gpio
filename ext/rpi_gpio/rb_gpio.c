@@ -29,6 +29,21 @@ SOFTWARE.
 extern VALUE m_GPIO;
 int gpio_warnings = 1;
 
+VALUE _extract_channels(VALUE channel_or_list)
+{
+    VALUE channel_list;
+
+    // parse arguments
+    if (RB_TYPE_P(channel_or_list, T_ARRAY) == 1) {
+        channel_list = channel_or_list;
+    } else {
+        channel_list = rb_ary_new();
+        rb_ary_push(channel_list, channel_or_list);
+    }
+
+    return channel_list;
+}
+
 void define_gpio_module_stuff(void)
 {
     int i;
@@ -94,10 +109,10 @@ int mmap_gpio_mem(void)
 int is_gpio_initialized(unsigned int gpio)
 {
     if (gpio_direction[gpio] != INPUT && gpio_direction[gpio] != OUTPUT) {
-				rb_raise(rb_eRuntimeError,
-						"you must setup the GPIO channel first with "
-						"RPi::GPIO.setup CHANNEL, :as => :input or "
-						"RPi::GPIO.setup CHANNEL, :as => :output");
+        rb_raise(rb_eRuntimeError,
+            "you must setup the GPIO channel first with "
+            "RPi::GPIO.setup CHANNEL, :as => :input or "
+            "RPi::GPIO.setup CHANNEL, :as => :output");
         return 0;
     }
 
@@ -140,14 +155,14 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
     int found = 0;
     int channel = -666; // lol, quite a flag
     unsigned int gpio;
-   
+
     if (argc == 1) {
         channel = NUM2INT(argv[0]);
     } else if (argc > 1) {
         rb_raise(rb_eArgError, "wrong number of arguments; 0 for all pins, 1 for a specific pin");
         return Qnil;
     }
-   
+
     if (channel != -666 && get_gpio_number(channel, &gpio)) {
         return Qnil;
     }
@@ -168,7 +183,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
         } else {
             // clean up any /sys/class exports
             event_cleanup(gpio);
-  
+
             // set everything back to input
             if (gpio_direction[gpio] != -1) {
                 setup_gpio(gpio, INPUT, PUD_OFF);
@@ -182,7 +197,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
     if (!found && gpio_warnings) {
         rb_warn("no channels have been set up yet; nothing to clean up");
     }
-   
+
     return Qnil;
 }
 
@@ -197,7 +212,7 @@ VALUE GPIO_reset(VALUE self)
     return Qnil;
 }
 
-// RPi::GPIO.setup(channel, hash(:as => {:input, :output}, :pull => {:off, 
+// RPi::GPIO.setup(channel, hash(:as => {:input, :output}, :pull => {:off,
 // :down, :up}(default :off), :initialize => {:high, :low}))
 //
 // sets up a channel as either input or output with an optional pull-down or
@@ -206,6 +221,8 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
 {
     unsigned int gpio;
     int chan = -1;
+    VALUE channel_list = _extract_channels(channel);
+    int chan_count = RARRAY_LEN(channel_list);
     const char *direction_str = NULL;
     int direction;
     VALUE pud_val = Qnil;
@@ -216,7 +233,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
     VALUE initialize_val = Qnil;
     const char *initialize_str = NULL;
     int initialize = HIGH;
-  
+
     // func to set up channel stored in channel variable
     int setup_one(void) {
         if (get_gpio_number(chan, &gpio)) {
@@ -230,9 +247,9 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
             (gpio_direction[gpio] == -1 && func == 1)))
         {
             rb_warn("this channel is already in use... continuing anyway. use RPi::GPIO.set_warnings(false) to "
-								"disable warnings");
+                "disable warnings");
         }
-        
+
         if (gpio_warnings) {
             if (rpiinfo.p1_revision == 0) { // compute module - do nothing
             } else if ((rpiinfo.p1_revision == 1 &&
@@ -252,11 +269,6 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         return 1;
     }
 
-    // parse arguments
-  
-    // channel
-    chan = NUM2INT(channel);
-  
     // pin direction
     direction_str = rb_id2name(rb_to_id(rb_hash_aref(hash, ID2SYM(rb_intern("as")))));
     if (strcmp("input", direction_str) == 0) {
@@ -266,7 +278,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
     } else {
         rb_raise(rb_eArgError, "invalid pin direction; must be :input or :output");
     }
-   
+
     // pull up, down, or off
     pud_val = rb_hash_aref(hash, ID2SYM(rb_intern("pull")));
     if (pud_val != Qnil) {
@@ -274,7 +286,7 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
             rb_raise(rb_eArgError, "output pin cannot use pull argument");
             return Qnil;
         }
-  
+
         pud_str = rb_id2name(rb_to_id(pud_val));
         if (strcmp("down", pud_str) == 0) {
             pud = PUD_DOWN;
@@ -323,8 +335,11 @@ VALUE GPIO_setup(VALUE self, VALUE channel, VALUE hash)
         pud = PUD_OFF;
     }
 
-    if (!setup_one()) {
+    for (int i = 0; i < chan_count; i++) {
+      chan = NUM2INT(rb_ary_entry(channel_list, i));
+      if (!setup_one()) {
         return Qnil;
+      }
     }
 
     return self;
@@ -335,13 +350,13 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
 {
     int new_mode;
     const char *mode_str = NULL;
-  
+
     if (TYPE(mode) == T_SYMBOL) {
         mode_str = rb_id2name(rb_to_id(mode));
     } else {
         mode_str = RSTRING_PTR(mode);
     }
-  
+
     if (strcmp(mode_str, "board") == 0) {
         new_mode = BOARD;
     } else if (strcmp(mode_str, "bcm") == 0) {
@@ -349,7 +364,7 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
     } else {
         rb_raise(rb_eArgError, "invalid numbering mode; must be :board or :bcm");
     }
-      
+
     if (!is_rpi()) {
         return Qnil;
     }
@@ -372,39 +387,51 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
 VALUE GPIO_set_high(VALUE self, VALUE channel)
 {
     unsigned int gpio;
-    int chan = NUM2INT(channel);
+    int chan = -1;
+    VALUE channel_list = _extract_channels(channel);
+    int chan_count = RARRAY_LEN(channel_list);
 
-    if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
+    for (int i = 0; i < chan_count; i++) {
+      chan = NUM2INT(rb_ary_entry(channel_list, i));
+      if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
         return Qnil;
+      } else {
+        output_gpio(gpio, 1);
+      }
     }
 
-    output_gpio(gpio, 1);
     return self;
 }
 
 // RPi::GPIO.set_low(channel)
 VALUE GPIO_set_low(VALUE self, VALUE channel)
 {
-    unsigned int gpio;
-    int chan = NUM2INT(channel);
+  unsigned int gpio;
+  int chan = -1;
+  VALUE channel_list = _extract_channels(channel);
+  int chan_count = RARRAY_LEN(channel_list);
 
+  for (int i = 0; i < chan_count; i++) {
+    chan = NUM2INT(rb_ary_entry(channel_list, i));
     if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
-        return Qnil;
+      return Qnil;
+    } else {
+      output_gpio(gpio, 0);
     }
+  }
 
-    output_gpio(gpio, 0);
-    return self;
+  return self;
 }
 
 // RPi::GPIO.high?(channel)
 VALUE GPIO_test_high(VALUE self, VALUE channel)
 {
     unsigned int gpio;
-  
+
     if (get_gpio_number(NUM2INT(channel), &gpio) || !is_gpio_initialized(gpio) || check_gpio_priv()) {
         return Qnil;
     }
- 
+
     return input_gpio(gpio) ? Qtrue : Qfalse;
 }
 

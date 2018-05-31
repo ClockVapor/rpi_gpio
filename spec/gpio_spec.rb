@@ -77,14 +77,14 @@ describe RPi::GPIO do
     context "before numbering is set" do
       context "given a valid channel" do
         it "raises an error" do
-          expect { RPi::GPIO.setup 18, :as => :input } 
+          expect { RPi::GPIO.setup 18, :as => :input }
             .to raise_error RuntimeError
         end
       end
 
       context "given an invalid channel" do
         it "raises an error" do
-          expect { RPi::GPIO.setup 0, :as => :input } 
+          expect { RPi::GPIO.setup 0, :as => :input }
             .to raise_error RuntimeError
         end
       end
@@ -123,7 +123,7 @@ describe RPi::GPIO do
                 .to_not raise_error
             end
           end
-          
+
           context "given invalid pull direction" do
             it "raises an error" do
               expect { RPi::GPIO.setup 18, :as => :input, :pull => :nope }
@@ -181,7 +181,67 @@ describe RPi::GPIO do
 
       context "given an invalid channel" do
         it "raises an error" do
-          expect { RPi::GPIO.setup 0, :as => :input } 
+          expect { RPi::GPIO.setup 0, :as => :input }
+            .to raise_error ArgumentError
+        end
+      end
+
+      context "given multiple valid, unset channels" do
+        context "as input" do
+          context "given no pull direction" do
+            it "doesn't raise an error" do
+              expect { RPi::GPIO.setup [18, 19], :as => :input } .to_not raise_error
+            end
+          end
+
+          context "given :off pull direction" do
+            it "doesn't raise an error" do
+              expect { RPi::GPIO.setup [18, 19], :as => :input, :pull => :off }
+                .to_not raise_error
+            end
+          end
+
+          context "given :up pull direction" do
+            it "doesn't raise an error" do
+              expect { RPi::GPIO.setup [18, 19], :as => :input, :pull => :up }
+                .to_not raise_error
+            end
+          end
+
+          context "given :down pull direction" do
+            it "doesn't raise an error" do
+              expect { RPi::GPIO.setup [18, 19], :as => :input, :pull => :down }
+                .to_not raise_error
+            end
+          end
+
+          context "given invalid pull direction" do
+            it "raises an error" do
+              expect { RPi::GPIO.setup [18, 19], :as => :input, :pull => :nope }
+                .to raise_error ArgumentError
+            end
+          end
+        end
+
+        context "as output" do
+          context "given no pull direction" do
+            it "doesn't raise an error" do
+              expect { RPi::GPIO.setup [18, 19], :as => :output } .to_not raise_error
+            end
+          end
+
+          context "given a pull direction" do
+            it "raises an error" do
+              expect { RPi::GPIO.setup [18, 19], :as => :output, :pull => :down }
+                .to raise_error ArgumentError
+            end
+          end
+        end
+      end
+
+      context "given multiple channels with one invalid" do
+        it "raises an error" do
+          expect { RPi::GPIO.setup [0, 18], :as => :input }
             .to raise_error ArgumentError
         end
       end
@@ -231,6 +291,40 @@ describe RPi::GPIO do
           expect { RPi::GPIO.set_high 0 } .to raise_error ArgumentError
         end
       end
+
+      context "with multiple pins" do
+        context "given a valid output channel" do
+          before :each do
+            RPi::GPIO.setup [18, 19], :as => :output
+          end
+
+          it "doesn't raise an error" do
+            expect { RPi::GPIO.set_high [18, 19] } .to_not raise_error
+          end
+        end
+
+        context "given a valid input channel" do
+          before :each do
+            RPi::GPIO.setup [18, 19], :as => :input
+          end
+
+          it "raises an error" do
+            expect { RPi::GPIO.set_high [18, 19] } .to raise_error RuntimeError
+          end
+        end
+
+        context "given a valid, unset channel" do
+          it "raises an error" do
+            expect { RPi::GPIO.set_high [18, 19] } .to raise_error RuntimeError
+          end
+        end
+
+        context "given an invalid channel" do
+          it "raises an error" do
+            expect { RPi::GPIO.set_high [0, 18] } .to raise_error ArgumentError
+          end
+        end
+      end
     end
   end
 
@@ -275,6 +369,40 @@ describe RPi::GPIO do
       context "given an invalid channel" do
         it "raises an error" do
           expect { RPi::GPIO.set_low 0 } .to raise_error ArgumentError
+        end
+      end
+
+      context "with multiple channels" do
+        context "given a valid output channel" do
+          before :each do
+            RPi::GPIO.setup [18, 19], :as => :output
+          end
+
+          it "doesn't raise an error" do
+            expect { RPi::GPIO.set_low [18, 19] } .to_not raise_error
+          end
+        end
+
+        context "given a valid input channel" do
+          before :each do
+            RPi::GPIO.setup [18, 19], :as => :input
+          end
+
+          it "raises an error" do
+            expect { RPi::GPIO.set_low [18, 19] } .to raise_error RuntimeError
+          end
+        end
+
+        context "given a valid, unset channel" do
+          it "raises an error" do
+            expect { RPi::GPIO.set_low [18, 19] } .to raise_error RuntimeError
+          end
+        end
+
+        context "given an invalid channel" do
+          it "raises an error" do
+            expect { RPi::GPIO.set_low [0, 18] } .to raise_error ArgumentError
+          end
         end
       end
     end
@@ -354,7 +482,7 @@ describe RPi::GPIO do
         end
 
         it "doesn't raise an error" do
-          expect { RPi::GPIO.low? 18 } .to_not raise_error 
+          expect { RPi::GPIO.low? 18 } .to_not raise_error
         end
       end
 
