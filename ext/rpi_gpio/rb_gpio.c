@@ -382,13 +382,29 @@ VALUE GPIO_set_numbering(VALUE self, VALUE mode)
 VALUE GPIO_set_high(VALUE self, VALUE channel)
 {
     unsigned int gpio;
-    int chan = NUM2INT(channel);
+    int chan = -1;
+    int chan_count = 0;
+    VALUE channel_list;
 
-    if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
-        return Qnil;
+    // parse arguments
+    if (RB_TYPE_P(channel, T_ARRAY) == 1) {
+      chan_count = RARRAY_LEN(channel);
+      channel_list = channel;
+    } else {
+      chan_count = 1;
+      channel_list = rb_ary_new();
+      rb_ary_push(channel_list, channel);
     }
 
-    output_gpio(gpio, 1);
+    for (int i = 0; i < chan_count; i++) {
+      chan = NUM2INT(rb_ary_entry(channel_list, i));
+      if (get_gpio_number(chan, &gpio) || !is_gpio_output(gpio) || check_gpio_priv()) {
+        return Qnil;
+      } else {
+        output_gpio(gpio, 1);
+      }
+    }
+
     return self;
 }
 

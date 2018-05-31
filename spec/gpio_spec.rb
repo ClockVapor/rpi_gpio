@@ -291,6 +291,40 @@ describe RPi::GPIO do
           expect { RPi::GPIO.set_high 0 } .to raise_error ArgumentError
         end
       end
+
+      context "with multiple pins" do
+        context "given a valid output channel" do
+          before :each do
+            RPi::GPIO.setup [18, 19], :as => :output
+          end
+
+          it "doesn't raise an error" do
+            expect { RPi::GPIO.set_high [18, 19] } .to_not raise_error
+          end
+        end
+
+        context "given a valid input channel" do
+          before :each do
+            RPi::GPIO.setup [18, 19], :as => :input
+          end
+
+          it "raises an error" do
+            expect { RPi::GPIO.set_high [18, 19] } .to raise_error RuntimeError
+          end
+        end
+
+        context "given a valid, unset channel" do
+          it "raises an error" do
+            expect { RPi::GPIO.set_high [18, 19] } .to raise_error RuntimeError
+          end
+        end
+
+        context "given an invalid channel" do
+          it "raises an error" do
+            expect { RPi::GPIO.set_high [0, 18] } .to raise_error ArgumentError
+          end
+        end
+      end
     end
   end
 
