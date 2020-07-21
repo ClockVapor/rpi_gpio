@@ -1,7 +1,7 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2015 Nick Lowery
+Copyright (c) 2014-2020 Nick Lowery
 
 Copyright (c) 2013-2014 Ben Croston
 
@@ -45,4 +45,3 @@ VALUE GPIO_set_low(VALUE self, VALUE channel);
 VALUE GPIO_test_high(VALUE self, VALUE channel);
 VALUE GPIO_test_low(VALUE self, VALUE channel);
 VALUE GPIO_set_warnings(VALUE self, VALUE setting);
-

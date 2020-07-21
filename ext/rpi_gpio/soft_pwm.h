@@ -1,9 +1,9 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2015 Nick Lowery
+Copyright (c) 2014-2020 Nick Lowery
 
-Copyright (c) 2013-2014 Ben Croston
+Copyright (c) 2013-2018 Ben Croston
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -30,3 +30,4 @@ void pwm_set_duty_cycle(unsigned int gpio, float dutycycle);
 void pwm_set_frequency(unsigned int gpio, float freq);
 void pwm_start(unsigned int gpio);
 void pwm_stop(unsigned int gpio);
+int pwm_exists(unsigned int gpio);

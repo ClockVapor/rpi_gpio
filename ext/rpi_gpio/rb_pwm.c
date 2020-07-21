@@ -1,9 +1,9 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2015 Nick Lowery
+Copyright (c) 2014-2020 Nick Lowery
 
-Copyright (c) 2013-2014 Ben Croston
+Copyright (c) 2013-2018 Ben Croston
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -54,13 +54,20 @@ VALUE PWM_initialize(VALUE self, VALUE channel, VALUE frequency)
   // convert channel to gpio
   if (get_gpio_number(chan, &gpio))
     return Qnil;
+ 
+  // does soft pwm already exist on this channel?
+  if (pwm_exists(gpio))
+  {
+    rb_raise(rb_eRuntimeError, "a PWM object already exists for this GPIO channel");
+    return Qnil;
+  }
   
   // ensure channel is set as output
   if (gpio_direction[gpio] != OUTPUT)
   {
     rb_raise(rb_eRuntimeError, "you must setup the GPIO channel as output "
       "first with RPi::GPIO.setup CHANNEL, :as => :output");
-      return Qnil;
+    return Qnil;
   }
   
   rb_iv_set(self, "@gpio", UINT2NUM(gpio));

@@ -1,4 +1,4 @@
-# rpi_gpio v0.3.3
+# rpi_gpio v0.4.0
 
 Ruby conversion of [RPi.GPIO Python module](https://pypi.python.org/pypi/RPi.GPIO)
 
@@ -9,7 +9,7 @@ Manipulate your Raspberry Pi's GPIO pins from Ruby!
 - Boolean input/output
 - Software-driven PWM (written in C for speed)
 
-Up-to-date with RPi.GPIO Python module version 0.6.3, so it works on all Raspberry Pi models!
+Up-to-date with RPi.GPIO Python module version 0.7.0, so it works on all Raspberry Pi models!
 
 ## Sample Usage
 
@@ -139,7 +139,7 @@ to clean up all pins and to also reset the selected numbering mode.
 
 Original Python code by Ben Croston modified for Ruby by Nick Lowery
 
-Copyright (c) 2014-2015 [Nick Lowery](https://github.com/ClockVapor)
+Copyright (c) 2014-2020 [Nick Lowery](https://github.com/ClockVapor)
 
 View LICENSE for full license.
 

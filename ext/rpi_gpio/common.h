@@ -1,7 +1,7 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2016 Nick Lowery
+Copyright (c) 2014-2020 Nick Lowery
 
 Copyright (c) 2013-2015 Ben Croston
 

@@ -1,7 +1,7 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2016 Nick Lowery
+Copyright (c) 2014-2020 Nick Lowery
 
 Copyright (c) 2013-2014 Ben Croston
 
@@ -47,8 +47,7 @@ int check_gpio_priv(void)
     // check mmap setup has worked
     if (!module_setup)
     {
-        rb_raise(rb_eRuntimeError, "no access to /dev/mem.  Try "
-          "running as root!");
+        rb_raise(rb_eRuntimeError, "no access to /dev/mem.  Try running as root!");
         return 2;
     }
     return 0;
@@ -67,10 +66,8 @@ int get_gpio_number(int channel, unsigned int *gpio)
 
     // check channel number is in range
     if ( (gpio_mode == BCM && (channel < 0 || channel > 53))
-      || (gpio_mode == BOARD && (channel < 1 || channel > 26) && 
-          rpiinfo.p1_revision != 3)
-      || (gpio_mode == BOARD && (channel < 1 || channel > 40) &&
-          rpiinfo.p1_revision == 3))
+      || (gpio_mode == BOARD && (channel < 1 || channel > 26) && rpiinfo.p1_revision != 3)
+      || (gpio_mode == BOARD && (channel < 1 || channel > 40) && rpiinfo.p1_revision == 3) )
     {
         rb_raise(rb_eArgError, "the channel sent is invalid on a Raspberry Pi");
         return 4;
@@ -81,8 +78,7 @@ int get_gpio_number(int channel, unsigned int *gpio)
     {
         if (*(*pin_to_gpio+channel) == -1)
         {
-            rb_raise(rb_eArgError, "the channel sent is invalid on a Raspberry "
-              "Pi");
+            rb_raise(rb_eArgError, "the channel sent is invalid on a Raspberry Pi");
             return 5;
         } else {
             *gpio = *(*pin_to_gpio+channel);

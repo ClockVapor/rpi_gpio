@@ -54,6 +54,10 @@ describe "RPi::GPIO::PWM" do
         context "with a valid frequency" do
           let(:pwm) { RPi::GPIO::PWM.new(18, 100) }
 
+          after :each do
+            pwm.stop
+          end
+
           it "doesn't raise an error" do
             expect { pwm } .to_not raise_error
           end
@@ -79,6 +83,10 @@ describe "RPi::GPIO::PWM" do
     end
 
     let(:pwm) { RPi::GPIO::PWM.new(18, 100) }
+
+    after :each do
+      pwm.stop
+    end
 
     context "given a valid duty cycle" do
       let(:start) { pwm.start(65) }
@@ -132,6 +140,10 @@ describe "RPi::GPIO::PWM" do
 
     let(:pwm) { RPi::GPIO::PWM.new(18, 100) }
 
+    after :each do
+      pwm.stop
+    end
+
     # pin number is 18, but GPIO number is 24
     it "gives the associated GPIO number" do
       expect(pwm.gpio).to eq 24
@@ -150,6 +162,10 @@ describe "RPi::GPIO::PWM" do
       p
     end
 
+    after :each do
+      pwm.stop
+    end
+
     it "gives the current duty cycle" do
       expect(pwm.duty_cycle).to eq 5
     end
@@ -165,6 +181,10 @@ describe "RPi::GPIO::PWM" do
       p = RPi::GPIO::PWM.new(18, 100)
       p.start(5)
       p
+    end
+
+    after :each do
+      pwm.stop
     end
 
     context "given a valid duty cycle" do
@@ -209,6 +229,10 @@ describe "RPi::GPIO::PWM" do
 
     let(:pwm) { RPi::GPIO::PWM.new(18, 100) }
 
+    after :each do
+      pwm.stop
+    end
+
     it "gives the current frequency" do
       expect(pwm.frequency).to eq 100
     end
@@ -224,6 +248,10 @@ describe "RPi::GPIO::PWM" do
       p = RPi::GPIO::PWM.new(18, 100)
       p.start(5)
       p
+    end
+
+    after :each do
+      pwm.stop
     end
 
     context "given a valid frequency" do
@@ -257,6 +285,10 @@ describe "RPi::GPIO::PWM" do
       p = RPi::GPIO::PWM.new(18, 100)
       p.start(5)
       p
+    end
+
+    after :each do
+      pwm.stop
     end
 
     it "sets the PWM's running status to false" do
