@@ -7,8 +7,9 @@ Gem::Specification.new do |s|
   s.authors = ['Nick Lowery']
   s.extensions << 'ext/rpi_gpio/extconf.rb'
   s.email = 'nick.a.lowery@gmail.com'
-  s.files = Dir.glob(["ext/**/*", 'Gemfile*', 'Rakefile', 'LICENSE', 'README.md'])
+  s.files = Dir.glob(['lib/**/*', 'Gemfile', 'Rakefile', 'LICENSE', 'README.md'])
   s.homepage = 'https://github.com/ClockVapor/rpi_gpio'
+  s.add_dependency 'epoll'
   s.add_development_dependency 'rake-compiler'
   s.add_development_dependency 'rspec'
 end
