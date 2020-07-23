@@ -20,16 +20,17 @@ module RPi
       end
 
       # Read the initial pin value and yield it to the block
-      fd = File.open "/sys/class/gpio/gpio#{pin}/value", 'r'
-      yield fd.read.chomp
-
-      epoll = Epoll.create
-      epoll.add fd, Epoll::PRI
-
-      loop do
-        fd.seek 0, IO::SEEK_SET
-        epoll.wait # put the program to sleep until the status changes
+      File.open "/sys/class/gpio/gpio#{pin}/value", 'r' do |fd|
         yield fd.read.chomp
+
+        epoll = Epoll.create
+        epoll.add fd, Epoll::PRI
+
+        loop do
+          fd.seek 0, IO::SEEK_SET
+          epoll.wait # put the program to sleep until the status changes
+          yield fd.read.chomp
+        end
       end
     ensure
       # Unexport the pin when we're done
