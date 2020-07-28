@@ -35,17 +35,32 @@ module RPi
       end
 
       def self.set_direction(gpio, direction)
-        # TODO: May need to retry opening this file several times. See original code.
         validate_direction(direction)
-        File.open("/sys/class/gpio/gpio#{gpio}/direction", 'w') do |file|
-          file.write(direction.to_s)
+        tries = 0
+        begin
+          File.open("/sys/class/gpio/gpio#{gpio}/direction", 'w') do |file|
+            file.write(direction.to_s)
+          end
+        rescue
+          raise if tries > 5
+          sleep 0.1
+          tries += 1
+          retry
         end
       end
 
       def self.set_edge(gpio, edge)
         validate_edge(edge)
-        File.open("/sys/class/gpio/gpio#{gpio}/edge", 'w') do |file|
-          file.write(edge.to_s)
+        tries = 0
+        begin
+          File.open("/sys/class/gpio/gpio#{gpio}/edge", 'w') do |file|
+            file.write(edge.to_s)
+          end
+        rescue
+          raise if tries > 5
+          sleep 0.1
+          tries += 1
+          retry
         end
       end
 
