@@ -14,11 +14,86 @@ module RPi
       add_callback(gpio, &block)
     end
 
+    def self.wait_for_edge(channel, edge, bounce_time: nil, timeout: -1)
+      gpio = get_gpio_number(channel)
+      if callback_exists(gpio)
+        raise RuntimeError, "conflicting edge detection already enabled for GPIO #{gpio}"
+      end
+
+      ensure_gpio_input(gpio)
+      validate_edge(edge)
+      was_gpio_new = false
+      current_edge = get_event_edge(gpio)
+      if current_edge == edge
+        g = get_gpio(gpio)
+        if g.bounce_time && g.bounce_time != bounce_time
+          raise RuntimeError, "conflicting edge detection already enabled for GPIO #{gpio}"
+        end
+      elsif current_edge.nil?
+        was_gpio_new = true
+        g = new_gpio(gpio)
+        set_edge(gpio, edge)
+        g.edge = edge
+        g.bounce_time = bounce_time
+      else
+        g = get_gpio(gpio)
+        set_edge(gpio, edge)
+        g.edge = edge
+        g.bounce_time = bounce_time
+        g.initial_wait = 1
+      end
+
+      if @@epoll_blocking.nil?
+        @@epoll_blocking = Epoll.create
+      end
+      @@epoll_blocking.add(g.value_file, Epoll::PRI)
+
+      initial_edge = true
+      the_value = nil
+      timed_out = false
+      begin
+        while the_value.nil? && !timed_out do
+          events = @@epoll_blocking.wait(timeout)
+          if events.empty?
+            timed_out = true
+          end
+          events.each do |event|
+            if event.events & Epoll::PRI != 0
+              event.data.seek(0, IO::SEEK_SET)
+              value = event.data.read.chomp.to_i
+              if event.data == g.value_file
+                if initial_edge # ignore first epoll trigger
+                  initial_edge = false
+                else
+                  now = Time.now.to_f
+                  if g.bounce_time.nil? || g.last_call == 0 || g.last_call > now ||
+                     (now - g.last_call) * 1000 > g.bounce_time then
+                    g.last_call = now
+                    the_value = value
+                  end
+                end
+              end
+            end
+          end
+        end
+
+        if the_value
+          return the_value
+        end
+      ensure
+        @@epoll_blocking.del(g.value_file)
+        if was_gpio_new
+          delete_gpio(gpio)
+        end
+      end
+    end
+
     private
       @@callbacks = []
       @@gpios = []
       @@epoll = nil
       @@epoll_thread = nil
+      @@epoll_blocking = nil
   
       def self.export(gpio)
         unless File.exist?("/sys/class/gpio/gpio#{gpio}")
@@ -164,8 +239,8 @@ module RPi
                 g.initial_thread = false
               else
                 now = Time.now.to_f
-                if g.bounce_time.nil? || (now - g.last_call) * 1000 > g.bounce_time || g.last_call == 0 ||
-                   g.last_call > now
+                if g.bounce_time.nil? || g.last_call == 0 || g.last_call > now ||
+                   (now - g.last_call) * 1000 > g.bounce_time then
                   g.last_call = now
                   run_callbacks(g.gpio, value)
                 end
