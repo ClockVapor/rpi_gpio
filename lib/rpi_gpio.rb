@@ -94,11 +94,11 @@ module RPi
       end
 
       def self.get_gpio(gpio)
-        @@gpios.first { |g| g.gpio == gpio }
+        @@gpios.find { |g| g.gpio == gpio }
       end
 
       def self.get_gpio_by_value_file(value_file)
-        @@gpios.first { |g| g.value_file == value_file }
+        @@gpios.find { |g| g.value_file == value_file }
       end
 
       def self.get_event_edge(gpio) # gpio_event_added in python library
