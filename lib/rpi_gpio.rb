@@ -164,7 +164,7 @@ module RPi
                 g.initial_thread = false
               else
                 now = Time.now.to_f
-                if g.bounce_time || (now - g.last_call) * 1000 > g.bounce_time || g.last_call == 0 ||
+                if g.bounce_time.nil? || (now - g.last_call) * 1000 > g.bounce_time || g.last_call == 0 ||
                    g.last_call > now
                   g.last_call = now
                   run_callbacks(g.gpio, value)
