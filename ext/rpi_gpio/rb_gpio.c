@@ -58,6 +58,7 @@ void define_gpio_module_stuff(void)
     rb_define_module_function(m_GPIO, "low?", GPIO_test_low, 1);
     rb_define_module_function(m_GPIO, "set_warnings", GPIO_set_warnings, 1);
     rb_define_module_function(m_GPIO, "get_gpio_number", GPIO_get_gpio_number, 1);
+    rb_define_module_function(m_GPIO, "channel_from_gpio", GPIO_channel_from_gpio, 1);
 
     for (i = 0; i < 54; i++) {
         gpio_direction[i] = -1;
@@ -177,7 +178,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
     if (module_setup && !setup_error) {
         if (channel == -666) {
             // clean up any /sys/class exports
-            event_cleanup_all();
+            rb_funcall(m_GPIO, rb_intern("event_cleanup_all"), 0);
 
             // set everything back to input
             for (i = 0; i < 54; i++) {
@@ -189,7 +190,7 @@ VALUE GPIO_clean_up(int argc, VALUE *argv, VALUE self)
             }
         } else {
             // clean up any /sys/class exports
-            event_cleanup(gpio);
+            rb_funcall(m_GPIO, rb_intern("event_cleanup"), 1, INT2NUM(gpio));
 
             // set everything back to input
             if (gpio_direction[gpio] != -1) {
@@ -471,4 +472,31 @@ VALUE GPIO_get_gpio_number(VALUE self, VALUE channel)
     }
 
     return INT2NUM(gpio);
+}
+
+static unsigned int chan_from_gpio(unsigned int gpio)
+{
+    int chan;
+    int chans;
+
+    if (gpio_mode == BCM)
+        return gpio;
+    if (rpiinfo.p1_revision == 0)   // not applicable for compute module
+        return -1;
+    else if (rpiinfo.p1_revision == 1 || rpiinfo.p1_revision == 2)
+        chans = 26;
+    else
+        chans = 40;
+    for (chan=1; chan<=chans; chan++)
+        if (*(*pin_to_gpio+chan) == (int)gpio)
+            return chan;
+    return -1;
+}
+
+// RPi::GPIO.channel_from_gpio(gpio)
+VALUE GPIO_channel_from_gpio(VALUE self, VALUE gpio)
+{
+    unsigned int gpio_ = NUM2INT(gpio);
+    unsigned int channel = chan_from_gpio(gpio_);
+    return INT2NUM(channel);
 }
