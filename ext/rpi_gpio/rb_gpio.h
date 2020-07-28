@@ -46,3 +46,4 @@ VALUE GPIO_test_low(VALUE self, VALUE channel);
 VALUE GPIO_set_warnings(VALUE self, VALUE setting);
 VALUE GPIO_get_gpio_number(VALUE self, VALUE channel);
 VALUE GPIO_channel_from_gpio(VALUE self, VALUE gpio);
+VALUE GPIO_ensure_gpio_input(VALUE self, VALUE gpio);

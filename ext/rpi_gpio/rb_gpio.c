@@ -59,6 +59,7 @@ void define_gpio_module_stuff(void)
     rb_define_module_function(m_GPIO, "set_warnings", GPIO_set_warnings, 1);
     rb_define_module_function(m_GPIO, "get_gpio_number", GPIO_get_gpio_number, 1);
     rb_define_module_function(m_GPIO, "channel_from_gpio", GPIO_channel_from_gpio, 1);
+    rb_define_module_function(m_GPIO, "ensure_gpio_input", GPIO_ensure_gpio_input, 1);
 
     for (i = 0; i < 54; i++) {
         gpio_direction[i] = -1;
@@ -499,4 +500,11 @@ VALUE GPIO_channel_from_gpio(VALUE self, VALUE gpio)
     unsigned int gpio_ = NUM2INT(gpio);
     unsigned int channel = chan_from_gpio(gpio_);
     return INT2NUM(channel);
+}
+
+// RPi::GPIO.ensure_gpio_input(gpio)
+VALUE GPIO_ensure_gpio_input(VALUE self, VALUE gpio)
+{
+    unsigned int gpio_ = NUM2INT(gpio);
+    return is_gpio_input(gpio_) ? Qtrue : Qfalse;
 }

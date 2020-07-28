@@ -7,7 +7,7 @@ module RPi
       gpio = get_gpio_number(channel)
       ensure_gpio_input(gpio)
       validate_edge(on)
-      if bounce_time <= 0
+      if bounce_time && bounce_time <= 0
         raise ArgumentError, "`bounce_time` must be greater than 0; given #{bounce_time}"
       end
       add_edge_detect(gpio, on, bounce_time)
@@ -17,6 +17,8 @@ module RPi
     private
       @@callbacks = []
       @@gpios = []
+      @@epoll = nil
+      @@epoll_thread = nil
   
       def self.export(gpio)
         unless File.exist?("/sys/class/gpio/gpio#{gpio}")
@@ -69,13 +71,22 @@ module RPi
         g.last_call = 0
         g.thread_added = false
         @@gpios << g
+        g
       end
 
       def self.delete_gpio(gpio)
         @@gpios.delete_if { |g| g.gpio == gpio }
       end
 
-      def self.get_event_edge(gpio)
+      def self.get_gpio(gpio)
+        @@gpios.first { |g| g.gpio == gpio }
+      end
+
+      def self.get_gpio_by_value_file(value_file)
+        @@gpios.first { |g| g.value_file == value_file }
+      end
+
+      def self.get_event_edge(gpio) # gpio_event_added in python library
         g = @@gpios.find { |g| g.gpio == gpio }
         if g
           return g.edge
@@ -83,47 +94,125 @@ module RPi
       end
 
       def self.add_edge_detect(gpio, edge, bounce_time = nil)
-        # TODO
+        current_edge = get_event_edge(gpio)
+        if current_edge.nil?
+          g = new_gpio(gpio)
+          set_edge(gpio, edge)
+          g.edge = edge
+          g.bounce_time = bounce_time
+        elsif current_edge == edge
+          g = get_gpio(gpio)
+          if (bounce_time && g.bounce_time != bounce_time) || g.thread_added
+            raise RuntimeError, "conflicting edge detection already enabled for GPIO #{gpio}"
+          end
+        else
+          raise RuntimeError, "conflicting edge detection already enabled for GPIO #{gpio}"
+        end
+
+        if @@epoll.nil?
+          @@epoll = Epoll.create
+        end
+
+        begin
+          @@epoll.add(g.value_file, Epoll::PRI)
+        rescue
+          remove_edge_detect(gpio)
+          raise
+        end
+
+        if @@epoll_thread.nil? || !@@epoll_thread.alive?
+          @@epoll_thread = Thread.new { poll_thread }
+        end
       end
 
-      def self.event_cleanup(gpio)
-        # TODO
+      def self.remove_edge_detect(gpio)
+        g = get_gpio(gpio)
+        if g and @@epoll
+          @@epoll.del(g.value_file)
+          set_edge(gpio, :none)
+          g.edge = :none
+          g.value_file.close
+          unexport(gpio)
+          delete_gpio(gpio)
+        end
       end
 
-      def self.event_cleanup_all
-        # TODO
-      end
-
-      def self.run_callbacks(gpio)
-        @@callbacks.each do |callback|
-          if callback.gpio == gpio
-            callback.call(RPi::GPIO.channel_from_gpio(gpio))
+      def self.poll_thread
+        loop do
+          events = @@epoll.wait
+          events.each do |event|
+            if event.events & Epoll::PRI != 0
+              event.data.seek(0, IO::SEEK_SET)
+              g = get_gpio_by_value_file(event.data)
+              value = event.data.read.chomp.to_i
+              if g.initial_thread # ignore first epoll trigger
+                g.initial_thread = false
+              else
+                now = Time.now.to_f
+                if g.bounce_time || (now - g.last_call) * 1000 > g.bounce_time || g.last_call == 0 ||
+                   g.last_call > now
+                  g.last_call = now
+                  run_callbacks(g.gpio, value)
+                end
+              end
+            end
           end
         end
       end
 
-      def self.add_callback(gpio, &block)
-        @@callbacks << RPi::GPIO::Callback.new(gpio, &block)
-        RPi::GPIO._add_callback(gpio) # TODO replace this
+      def self.event_cleanup(gpio)
+        @@gpios.map { |g| g.gpio }.each do |gpio_|
+          if gpio.nil? || gpio_ == gpio
+            remove_edge_detect(gpio_)
+          end
+        end
+
+        if @@gpios.empty? && @@epoll_thread
+          @@epoll_thread.terminate
+        end
       end
 
-      def validate_direction(direction)
+      def self.event_cleanup_all
+        event_cleanup(nil)
+      end
+
+      def self.add_callback(gpio, &block)
+        @@callbacks << Callback.new(gpio, &block)
+      end
+
+      def self.remove_callbacks(gpio)
+        @@callbacks.delete_if { |g| g.gpio == gpio }
+      end
+
+      def self.callback_exists(gpio)
+        @@gpios.find { |g| g.gpio == gpio } != nil
+      end
+
+      def self.run_callbacks(gpio, value)
+        @@callbacks.each do |callback|
+          if callback.gpio == gpio
+            callback.block.call(channel_from_gpio(gpio), value)
+          end
+        end
+      end
+
+      def self.validate_direction(direction)
         direction = direction.to_s
         if direction != 'in' && direction != 'out'
           raise ArgumentError, "`direction` must be 'in' or 'out'; given '#{direction}'"
         end
       end
 
-      def validate_edge(edge)
+      def self.validate_edge(edge)
         edge = edge.to_s
-        if edge != 'rising' && edge != 'falling' && edge != 'both'
-          raise ArgumentError, "`edge` must be 'rising', 'falling', or 'both'; given '#{edge}'"
+        if edge != 'rising' && edge != 'falling' && edge != 'both' && edge != 'none'
+          raise ArgumentError, "`edge` must be 'rising', 'falling', 'both', or 'none'; given '#{edge}'"
         end
       end
 
       class GPIO
         attr_accessor :gpio, :exported, :value_file, :initial_thread, :initial_wait, :bounce_time, :last_call,
-          :thread_added
+          :thread_added, :edge
       end
 
       class Callback
