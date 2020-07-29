@@ -14,6 +14,12 @@ module RPi
       add_callback(gpio, &block)
     end
 
+    def self.stop_watching(channel)
+      gpio = get_gpio_number(channel)
+      remove_edge_detect(gpio)
+      remove_callbacks(gpio)
+    end
+
     def self.wait_for_edge(channel, edge, bounce_time: nil, timeout: -1)
       gpio = get_gpio_number(channel)
       if callback_exists(gpio)
@@ -210,6 +216,7 @@ module RPi
           raise
         end
 
+        g.thread_added = true
         if @@epoll_thread.nil? || !@@epoll_thread.alive?
           @@epoll_thread = Thread.new { poll_thread }
         end
