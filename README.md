@@ -38,15 +38,10 @@ RPi::GPIO.set_numbering :bcm
 To receive input from a GPIO pin, you must first initialize it as an input pin:
 ```ruby
 RPi::GPIO.setup PIN_NUM, :as => :input
+# or
+RPi::GPIO.setup [PIN1_NUM, PIN2_NUM, ...], :as => :input
 ```
 The pin number will differ based on your selected numbering system and which pin you want to use.
-
-Now you can use the calls
-```ruby
-RPi::GPIO.high? PIN_NUM
-RPi::GPIO.low? PIN_NUM
-```
-to receive either `true` or `false`.
 
 You can use the additional hash argument `:pull` to apply a pull-up or pull-down resistor to the input pin like so:
 ```ruby
@@ -57,11 +52,51 @@ RPi::GPIO.setup PIN_NUM, :as => :input, :pull => :up
 RPi::GPIO.setup PIN_NUM, :as => :input, :pull => :off
 ```
 
+Now you can use the calls
+```ruby
+RPi::GPIO.high? PIN_NUM
+RPi::GPIO.low? PIN_NUM
+```
+to receive either `true` or `false`.
+
+If you prefer to use a callback when a pin edge is detected, you can use the `watch` method:
+```ruby
+RPi::GPIO.watch PIN_NUM, :on => :rising do |pin, value| # :on supports :rising, :falling, and :both
+  ...
+end
+```
+
+`watch` also supports the optional `bounce_time` parameter found in the Python module to prevent duplicate events from firing:
+```ruby
+RPi::GPIO.watch PIN_NUM, :on => :falling, :bounce_time => 200 do |pin, value|
+  ...
+end
+```
+
+If you want to block execution until a pin edge is detected, there's `wait_for_edge`:
+```ruby
+puts 'Waiting to start...'
+RPi::GPIO.wait_for_edge PIN_NUM, :rising # :rising, :falling, and :both are also supported here
+puts 'Here we go!'
+```
+
+`wait_for_edge` accepts optional `bounce_time` and `timeout` arguments too:
+```ruby
+puts 'Waiting to start...'
+value = RPi::GPIO.wait_for_edge PIN_NUM, :falling, :bounce_time => 200, :timeout => 5000
+if value.nil? # nil is returned if the timeout is reached
+  print 'You took too long. '
+end
+puts 'Here we go!'
+```
+
 #### Output
 
 To send output to a GPIO pin, you must first initialize it as an output pin:
 ```ruby
 RPi::GPIO.setup PIN_NUM, :as => :output
+# or
+RPi::GPIO.setup [PIN1_NUM, PIN2_NUM, ...], :as => :output
 ```
 Now you can use the calls
 ```ruby
