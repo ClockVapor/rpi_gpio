@@ -8,6 +8,7 @@ Manipulate your Raspberry Pi's GPIO pins from Ruby!
 
 - Boolean input/output
 - Software-driven PWM (written in C for speed)
+- Event-driven input (blocking and non-blocking)
 
 Up-to-date with RPi.GPIO Python module version 0.7.0, so it works on all Raspberry Pi models!
 
