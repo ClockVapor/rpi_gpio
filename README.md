@@ -74,6 +74,11 @@ RPi::GPIO.watch PIN_NUM, :on => :falling, :bounce_time => 200 do |pin, value|
 end
 ```
 
+To stop watching a pin, use `stop_watching`:
+```ruby
+RPi::GPIO.stop_watching PIN_NUM
+```
+
 If you want to block execution until a pin edge is detected, there's `wait_for_edge`:
 ```ruby
 puts 'Waiting to start...'
