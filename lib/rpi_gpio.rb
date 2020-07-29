@@ -229,7 +229,11 @@ module RPi
 
       def self.poll_thread
         loop do
-          events = @@epoll.wait
+          begin
+            events = @@epoll.wait
+          rescue IOError # empty interest list
+            break
+          end
           events.each do |event|
             if event.events & Epoll::PRI != 0
               event.data.seek(0, IO::SEEK_SET)
