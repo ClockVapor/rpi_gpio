@@ -16,6 +16,7 @@ module RPi
 
     def self.stop_watching(channel)
       gpio = get_gpio_number(channel)
+      ensure_gpio_input(gpio)
       remove_edge_detect(gpio)
       remove_callbacks(gpio)
     end
