@@ -1,4 +1,4 @@
-# rpi_gpio v0.4.0
+# rpi_gpio v0.5.0
 
 Ruby conversion of [RPi.GPIO Python module](https://pypi.python.org/pypi/RPi.GPIO)
 
