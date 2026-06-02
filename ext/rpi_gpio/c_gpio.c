@@ -1,9 +1,9 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2020 Nick Lowery
+Copyright (c) 2014-2026 Nick Lowery
 
-Copyright (c) 2012-2019 Ben Croston
+Copyright (c) 2012-2021 Ben Croston
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -34,6 +34,8 @@ SOFTWARE.
 
 #define BCM2708_PERI_BASE_DEFAULT   0x20000000
 #define BCM2709_PERI_BASE_DEFAULT   0x3f000000
+#define BCM2710_PERI_BASE_DEFAULT   0x3f000000
+#define BCM2711_PERI_BASE_DEFAULT   0xfe000000
 #define GPIO_BASE_OFFSET            0x200000
 #define FSEL_OFFSET                 0   // 0x0000
 #define SET_OFFSET                  7   // 0x001c / 4
@@ -72,7 +74,9 @@ int setup(void)
     uint8_t *gpio_mem;
     uint32_t peri_base = 0;
     uint32_t gpio_base;
-    unsigned char buf[4];
+    uint8_t ranges[12] = { 0 };
+    uint8_t rev[4] = { 0 };
+    uint32_t cpu = 0;
     FILE *fp;
     char buffer[1024];
     char hardware[1024];
@@ -88,18 +92,51 @@ int setup(void)
         }
     }
 
-    // revert to /dev/mem method - requires root
+    // revert to /dev/mem method - requires root privileges
 
-    // determine peri_base
-    if ((fp = fopen("/proc/device-tree/soc/ranges", "rb")) != NULL) {
+    if ((fp = fopen("/proc/device-tree/soc/ranges", "rb")) != NULL)
+    {
         // get peri base from device tree
-        fseek(fp, 4, SEEK_SET);
-        if (fread(buf, 1, sizeof buf, fp) == sizeof buf) {
-            peri_base = buf[0] << 24 | buf[1] << 16 | buf[2] << 8 | buf[3] << 0;
+        if (fread(ranges, 1, sizeof(ranges), fp) >= 8) {
+            peri_base = ranges[4] << 24 | ranges[5] << 16 | ranges[6] << 8 | ranges[7] << 0;
+            if (!peri_base) {
+                peri_base = ranges[8] << 24 | ranges[9] << 16 | ranges[10] << 8 | ranges[11] << 0;
+            }
+        }
+        if ((ranges[0] != 0x7e) ||
+            (ranges[1] != 0x00) ||
+            (ranges[2] != 0x00) ||
+            (ranges[3] != 0x00) ||
+            ((peri_base != BCM2708_PERI_BASE_DEFAULT) &&
+             (peri_base != BCM2709_PERI_BASE_DEFAULT) &&
+             (peri_base != BCM2711_PERI_BASE_DEFAULT))) {
+                 // invalid ranges file
+                 peri_base = 0;
         }
         fclose(fp);
-    } else {
-        // guess peri base based on /proc/cpuinfo hardware field
+    }
+
+    // guess peri_base based on /proc/device-tree/system/linux,revision
+    if (!peri_base) {
+        if ((fp = fopen("/proc/device-tree/system/linux,revision", "rb")) != NULL) {
+            if (fread(rev, 1, sizeof(rev), fp) == 4) {
+                cpu = (rev[2] >> 4) & 0xf;
+                switch (cpu) {
+                    case 0 : peri_base = BCM2708_PERI_BASE_DEFAULT;
+                             break;
+                    case 1 :
+                    case 2 : peri_base = BCM2709_PERI_BASE_DEFAULT;
+                             break;
+                    case 3 : peri_base = BCM2711_PERI_BASE_DEFAULT;
+                             break;
+                }
+            }
+            fclose(fp);
+        }
+    }
+
+    // guess peri_base based on /proc/cpuinfo hardware field
+    if (!peri_base) {
         if ((fp = fopen("/proc/cpuinfo", "r")) == NULL)
             return SETUP_CPUINFO_FAIL;
 
@@ -108,20 +145,23 @@ int setup(void)
             if (strcmp(hardware, "BCM2708") == 0 || strcmp(hardware, "BCM2835") == 0) {
                 // pi 1 hardware
                 peri_base = BCM2708_PERI_BASE_DEFAULT;
-                found = 1;
             } else if (strcmp(hardware, "BCM2709") == 0 || strcmp(hardware, "BCM2836") == 0) {
                 // pi 2 hardware
                 peri_base = BCM2709_PERI_BASE_DEFAULT;
-                found = 1;
+            } else if (strcmp(hardware, "BCM2710") == 0 || strcmp(hardware, "BCM2837") == 0) {
+                // pi 3 hardware
+                peri_base = BCM2710_PERI_BASE_DEFAULT;
+            } else if (strcmp(hardware, "BCM2711") == 0) {
+                // pi 4 hardware
+                peri_base = BCM2711_PERI_BASE_DEFAULT;
             }
         }
         fclose(fp);
-        if (!found)
-            return SETUP_NOT_RPI_FAIL;
     }
 
     if (!peri_base)
-        return SETUP_NOT_RPI_FAIL;
+        return SETUP_NO_PERI_ADDR;
+
     gpio_base = peri_base + GPIO_BASE_OFFSET;
 
     // mmap the GPIO memory registers
