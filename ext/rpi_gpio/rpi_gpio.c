@@ -1,7 +1,7 @@
 /*
 Original code by Ben Croston modified for Ruby by Nick Lowery
 (github.com/clockvapor)
-Copyright (c) 2014-2015 Nick Lowery
+Copyright (c) 2014-2026 Nick Lowery
 
 Copyright (c) 2013-2014 Ben Croston
 
@@ -31,7 +31,7 @@ SOFTWARE.
 VALUE m_RPi = Qnil;
 VALUE m_GPIO = Qnil;
 
-void Init_rpi_gpio()
+void Init_rpi_gpio(void)
 {
   define_modules();
   define_gpio_module_stuff();
